@@ -532,8 +532,7 @@
       }
 
       .form-input,
-      .form-textarea,
-      .form-select {
+      .form-textarea {
         width: 100%;
         padding: 10px 14px;
         border: 1px solid #e5e7eb;
@@ -542,6 +541,22 @@
         font-family: "Manrope", sans-serif;
         transition: border-color 0.2s;
         background: white;
+      }
+
+      .form-select {
+        width: 100%;
+        padding: 10px 32px 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        transition: border-color 0.2s;
+        background: white;
+        appearance: none;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c7e89' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
       }
 
       .form-input:focus,
@@ -1035,7 +1050,7 @@
       >
         <div class="add-test-modal-content" @click.stop>
           <div class="confirm-modal-header">
-            <h3>🧬 Añadir Nuevo Test</h3>
+            <h3>{{ addTestModalTitle }}</h3>
           </div>
           <div class="add-test-modal-body">
             <div class="form-group">
@@ -1349,7 +1364,9 @@
                 @click="submitAddTest"
                 :disabled="addTestModal.loading"
               >
-                {{ addTestModal.loading ? "Creando..." : "Crear Test" }}
+                {{ addTestModal.loading ? addTestModal.isEditing ?
+                "Actualizando..." : "Creando..." : addTestModal.isEditing ?
+                "Actualizar Test" : "Crear Test" }}
               </button>
             </div>
           </div>
@@ -1384,6 +1401,8 @@
               loading: false,
               error: null,
               fieldErrors: {},
+              isEditing: false,
+              originalTestName: null,
               form: {
                 testName: "",
                 mode: "auto",
@@ -1398,19 +1417,26 @@
           };
         },
         computed: {
+          addTestModalTitle() {
+            return this.addTestModal.isEditing
+              ? "✏️ Editar Test"
+              : "🧬 Añadir Nuevo Test";
+          },
           filteredModesForExpected() {
             // Filtrar "auto" de los modos para Expected Mode
             return this.modes.filter((mode) => mode.code !== "auto");
           },
           availableModes() {
-            if (!this.tests) return [];
-            const modes = new Set();
-            this.tests.forEach((test) => {
-              if (test.expectedMode) {
-                modes.add(test.expectedMode);
-              }
-            });
-            return Array.from(modes).sort();
+            // Usar los modos del endpoint en lugar de extraer de los tests
+            // Filtrar "auto" del listado
+            const modeLabels = this.modes
+              .filter((mode) => mode.code !== "auto")
+              .map((mode) => mode.label);
+            // Añadir "Fallback" si no está ya incluido
+            if (!modeLabels.includes("Fallback")) {
+              modeLabels.push("Fallback");
+            }
+            return modeLabels.sort();
           },
           filteredTests() {
             if (!this.tests) return [];
@@ -1492,9 +1518,6 @@
             this.expandedTestName =
               this.expandedTestName === testName ? null : testName;
           },
-          editTest(test) {
-            console.log("Editar test:", test);
-          },
           deleteTest(test) {
             this.confirmModal = {
               show: true,
@@ -1511,6 +1534,8 @@
           },
           addTest() {
             this.addTestModal.show = true;
+            this.addTestModal.isEditing = false;
+            this.addTestModal.originalTestName = null;
             // Resetear el formulario
             this.addTestModal.form = {
               testName: "",
@@ -1521,6 +1546,66 @@
               expectedMode: "",
               expectedEvents: [],
               expectedResponse: "",
+            };
+            this.addTestModal.error = null;
+            this.addTestModal.fieldErrors = {};
+          },
+          parseExpectedEvents(expectedEvents) {
+            if (!expectedEvents) return [];
+            if (typeof expectedEvents === "string") {
+              try {
+                expectedEvents = JSON.parse(expectedEvents);
+              } catch (e) {
+                return [];
+              }
+            }
+            if (!Array.isArray(expectedEvents)) return [];
+
+            return expectedEvents.map((event) => {
+              const assert = {
+                type: event.type || "",
+                assertType: "count",
+                countType: "exactly",
+                exactly: null,
+                betweenMin: null,
+                betweenMax: null,
+              };
+
+              if (event.count) {
+                if (event.count.expectedExactly !== undefined) {
+                  assert.countType = "exactly";
+                  assert.exactly = event.count.expectedExactly;
+                } else if (event.count.expectedBetween) {
+                  assert.countType = "between";
+                  assert.betweenMin = event.count.expectedBetween[0];
+                  assert.betweenMax = event.count.expectedBetween[1];
+                }
+              }
+
+              return assert;
+            });
+          },
+          editTest(test) {
+            this.addTestModal.show = true;
+            this.addTestModal.isEditing = true;
+            this.addTestModal.originalTestName = test.testName;
+
+            // Parsear profile si es objeto a JSON string
+            let profileStr = test.profile || '{\n  "roles": []\n}';
+            if (typeof test.profile === "object") {
+              profileStr = JSON.stringify(test.profile, null, 2);
+            }
+
+            // Rellenar el formulario con los datos del test
+            this.addTestModal.form = {
+              testName: test.testName || "",
+              mode: test.mode || "auto",
+              input: test.input || "",
+              memory: test.memory || "",
+              profile: profileStr,
+              expectedMode: test.expectedMode || "",
+              expectedEvents: this.parseExpectedEvents(test.expectedEvents),
+              expectedResponse: test.expectedResponse || "",
             };
             this.addTestModal.error = null;
             this.addTestModal.fieldErrors = {};
@@ -1696,6 +1781,8 @@
             this.addTestModal.loading = false;
             this.addTestModal.error = null;
             this.addTestModal.fieldErrors = {};
+            this.addTestModal.isEditing = false;
+            this.addTestModal.originalTestName = null;
           },
           validateField(fieldName) {
             const value = this.addTestModal.form[fieldName];
@@ -1872,19 +1959,22 @@
                 expectedResponse: this.addTestModal.form.expectedResponse,
               };
 
-              const response = await fetch(
-                `https://n8n.housfy.com/webhook/sofy/new-test`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(body),
-                }
-              );
+              const endpoint = this.addTestModal.isEditing
+                ? `https://n8n.housfy.com/webhook/sofy/update-test`
+                : `https://n8n.housfy.com/webhook/sofy/new-test`;
+
+              const response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(body),
+              });
 
               if (!response.ok) {
-                let errorMessage = `Error al crear el test`;
+                let errorMessage = this.addTestModal.isEditing
+                  ? `Error al actualizar el test`
+                  : `Error al crear el test`;
                 try {
                   const errorData = await response.json();
                   if (errorData.errorMessage) {
@@ -1901,6 +1991,8 @@
               this.addTestModal.loading = false;
               this.addTestModal.error = null;
               this.addTestModal.fieldErrors = {};
+              this.addTestModal.isEditing = false;
+              this.addTestModal.originalTestName = null;
               await this.loadTests();
             } catch (err) {
               this.addTestModal.error = err.message;

@@ -359,7 +359,8 @@
         padding: 4px 8px;
         background: #f3f4f6;
         border-radius: 4px;
-        width: 50px;
+        width: 70px;
+        text-align: center;
       }
 
       .test-asserts {
@@ -621,6 +622,88 @@
         border-radius: 8px;
         margin-bottom: 20px;
       }
+
+      .filters-section {
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .filters-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .filter-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        transition: border-color 0.2s;
+      }
+
+      .filter-input:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .filter-select {
+        min-width: 180px;
+        padding: 10px 32px 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c7e89' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+      }
+
+      .filter-select:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .radio-buttons-group {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding: 8px 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        cursor: pointer;
+      }
+
+      .radio-label input[type="radio"] {
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        accent-color: #11aefa;
+      }
+
+      .radio-label span {
+        user-select: none;
+      }
     </style>
   </head>
   <body>
@@ -677,17 +760,52 @@
               <div class="summary-divider"></div>
               <div class="summary-item total">
                 <span class="label">Total:</span>
-                <span class="value">{{ tests.length }}</span>
+                <span class="value">{{ filteredTests.length }}</span>
+              </div>
+            </div>
+
+            <div class="filters-section">
+              <div class="filters-row">
+                <input
+                  type="text"
+                  class="filter-input"
+                  placeholder="Buscar por nombre o input..."
+                  v-model="searchText"
+                />
+                <select class="filter-select" v-model="selectedMode">
+                  <option value="">Todos los modos</option>
+                  <option
+                    v-for="mode in availableModes"
+                    :key="mode"
+                    :value="mode"
+                  >
+                    {{ mode }}
+                  </option>
+                </select>
+                <div class="radio-buttons-group">
+                  <label class="radio-label">
+                    <input type="radio" value="all" v-model="errorFilter" />
+                    <span>Todos</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      value="withErrors"
+                      v-model="errorFilter"
+                    />
+                    <span>Con Errores</span>
+                  </label>
+                </div>
               </div>
             </div>
 
             <div class="tests-list">
               <div
-                v-for="(test, index) in tests"
+                v-for="(test, index) in filteredTests"
                 :key="test.testIdentifier"
                 class="test-item"
-                :class="{ expanded: expandedTest === index }"
-                @click="toggleTest(index)"
+                :class="{ expanded: expandedTest === test.testIdentifier }"
+                @click="toggleTest(test.testIdentifier)"
               >
                 <div class="test-header">
                   <div class="test-header-left">
@@ -708,7 +826,10 @@
                   </div>
                 </div>
 
-                <div class="test-details" v-if="expandedTest === index">
+                <div
+                  class="test-details"
+                  v-if="expandedTest === test.testIdentifier"
+                >
                   <div class="details-section">
                     <h4>Perfil de Usuario</h4>
                     <div class="profile-info">
@@ -867,19 +988,25 @@
             tests: null,
             loading: false,
             error: null,
-            expandedTest: null,
+            expandedTest: null, // Ahora almacena testIdentifier en lugar de índice
             selectedTest: null,
+            searchText: "",
+            selectedMode: "",
+            errorFilter: "all",
+            modes: [],
+            loadingModes: false,
           };
         },
         computed: {
           summary() {
-            if (!this.tests) return { success: 0, partial: 0, failed: 0 };
+            if (!this.filteredTests)
+              return { success: 0, partial: 0, failed: 0 };
 
             let success = 0;
             let partial = 0;
             let failed = 0;
 
-            this.tests.forEach((test) => {
+            this.filteredTests.forEach((test) => {
               if (test.assertPercentage === 100) {
                 success++;
               } else if (test.assertPercentage > 0) {
@@ -891,6 +1018,55 @@
 
             return { success, partial, failed };
           },
+          availableModes() {
+            // Usar los modos del endpoint en lugar de extraer de los tests
+            // Filtrar "auto" del listado
+            const modeLabels = this.modes
+              .filter((mode) => mode.code !== "auto")
+              .map((mode) => mode.label);
+            // Añadir "Fallback" si no está ya incluido
+            if (!modeLabels.includes("Fallback")) {
+              modeLabels.push("Fallback");
+            }
+            return modeLabels.sort();
+          },
+          filteredTests() {
+            if (!this.tests) return [];
+            let filtered = this.tests;
+
+            // Filtrar por texto (testName e input)
+            if (this.searchText) {
+              const searchLower = this.searchText.toLowerCase();
+              filtered = filtered.filter(
+                (test) =>
+                  (test.testName &&
+                    test.testName.toLowerCase().includes(searchLower)) ||
+                  (test.input && test.input.toLowerCase().includes(searchLower))
+              );
+            }
+
+            // Filtrar por modo (expectedMode del assert de tipo "mode")
+            if (this.selectedMode) {
+              filtered = filtered.filter((test) => {
+                if (!test.assertDetails || !Array.isArray(test.assertDetails)) {
+                  return false;
+                }
+                return test.assertDetails.some(
+                  (assert) =>
+                    assert.mode && assert.mode.expected === this.selectedMode
+                );
+              });
+            }
+
+            // Filtrar por errores (Todos/ConErrores)
+            if (this.errorFilter === "withErrors") {
+              filtered = filtered.filter((test) => {
+                return test.assertPercentage !== 100;
+              });
+            }
+
+            return filtered;
+          },
         },
         mounted() {
           const urlParams = new URLSearchParams(window.location.search);
@@ -899,12 +1075,35 @@
           if (executionParam) {
             this.execution = executionParam;
             this.loadTests();
+            this.loadModes();
           } else {
             // Redirigir a test-executions.html si no hay execution param
             window.location.href = "test-executions.html";
           }
         },
         methods: {
+          async loadModes() {
+            this.loadingModes = true;
+            try {
+              const response = await fetch(
+                `https://n8n.housfy.com/webhook/sofy/get-admin-all-modes`
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  `Error al cargar los modos: ${response.statusText}`
+                );
+              }
+
+              const data = await response.json();
+              this.modes = data.modes || [];
+            } catch (err) {
+              console.error("Error al cargar los modos:", err);
+              this.modes = [];
+            } finally {
+              this.loadingModes = false;
+            }
+          },
           goBack() {
             window.location.href = "test-executions.html";
           },
@@ -936,8 +1135,9 @@
               this.loading = false;
             }
           },
-          toggleTest(index) {
-            this.expandedTest = this.expandedTest === index ? null : index;
+          toggleTest(testIdentifier) {
+            this.expandedTest =
+              this.expandedTest === testIdentifier ? null : testIdentifier;
           },
           getTestStatusClass(test) {
             if (test.assertPercentage === 100) return "success";
