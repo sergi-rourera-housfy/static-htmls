@@ -261,6 +261,7 @@
 
       .test-info {
         flex: 1;
+        overflow: hidden;
       }
 
       .test-name {
@@ -1029,7 +1030,9 @@
                           {{ test.expectedMode }}
                         </div>
                       </div>
-                      <div class="test-input">{{ test.input }}</div>
+                      <div class="test-input">
+                        {{ truncateText(test.expectedResponse) }}
+                      </div>
                     </div>
                   </div>
                   <div class="test-run-button" @click.stop="runTest(test)">
@@ -1337,15 +1340,22 @@
                             >Type
                             <span class="required-asterisk">*</span></label
                           >
-                          <input
-                            type="text"
+                          <select
                             v-model="assert.type"
-                            placeholder="Ej: ia_message"
-                            class="form-input"
+                            class="form-select"
                             :class="{ 'form-input-error': hasAssertFieldError(index, 'type') }"
                             :disabled="addTestModal.loading"
                             @blur="validateAssertField(index, 'type')"
-                          />
+                          >
+                            <option value="">Selecciona un tipo</option>
+                            <option value="ia_message">ia_message</option>
+                            <option value="ia_process">ia_process</option>
+                            <option value="ia_log">ia_log</option>
+                            <option value="ia_tool_result">
+                              ia_tool_result
+                            </option>
+                            <option value="ia_finished">ia_finished</option>
+                          </select>
                           <span
                             v-if="hasAssertFieldError(index, 'type')"
                             class="field-error"
@@ -1746,6 +1756,7 @@
 
             // Rellenar el formulario con los datos del test
             this.addTestModal.form = {
+              id: test.id,
               testName: test.testName || "",
               mode: test.mode || "auto",
               input: test.input || "",
@@ -2101,6 +2112,7 @@
             try {
               // Preparar el body del request
               const body = {
+                id: this.addTestModal.form.id,
                 testName: this.addTestModal.form.testName,
                 mode: this.addTestModal.form.mode,
                 input: this.addTestModal.form.input,
@@ -2214,6 +2226,11 @@
               background: backgrounds[bgIndex],
               color: textColors[textIndex],
             };
+          },
+          truncateText(text, maxLength = 200) {
+            if (!text) return "";
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + "...";
           },
         },
       }).mount("#app");

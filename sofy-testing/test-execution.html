@@ -320,6 +320,9 @@
         font-weight: 600;
         font-size: 16px;
         color: #333;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
       }
 
       .test-badge {
@@ -365,7 +368,7 @@
 
       .test-asserts {
         text-align: right;
-        width: 50px;
+        width: 40px;
       }
 
       .test-percentage {
@@ -373,6 +376,16 @@
         min-width: 50px;
         text-align: right;
         width: 50px;
+      }
+
+      .expected-mode-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 10px;
       }
 
       .test-details {
@@ -927,13 +940,22 @@
                 >
                   <div class="test-header">
                     <div class="test-header-left">
-                      <span class="test-name">{{ test.testName }}</span>
+                      <span class="test-name">
+                        {{ test.testName }}
+                        <div
+                          v-if="getExpectedMode(test)"
+                          class="expected-mode-tag"
+                          :style="getModeTagStyle(getExpectedMode(test))"
+                        >
+                          {{ getExpectedMode(test) }}
+                        </div>
+                      </span>
                     </div>
                     <div class="test-stats">
                       <span class="test-duration">{{ test.testDuration }}</span>
-                      <span class="test-percentage">
+                      <!-- <span class="test-percentage">
                         {{ (test.assertPercentage).toFixed(0) }}%
-                      </span>
+                      </span> -->
                       <span class="test-asserts"
                         >{{ test.assertCompletion.success }}/{{
                         test.assertCompletion.total }}</span
@@ -1335,6 +1357,77 @@
           },
           getAssertStatusText(assert) {
             return this.isAssertSuccess(assert) ? "✓ Éxito" : "✗ Fallido";
+          },
+          getExpectedMode(test) {
+            if (!test.assertDetails || !Array.isArray(test.assertDetails)) {
+              return null;
+            }
+            const modeAssert = test.assertDetails.find(
+              (assert) => assert.mode && assert.mode.expected
+            );
+            return modeAssert ? modeAssert.mode.expected : null;
+          },
+          getModeTagStyle(mode) {
+            if (!mode) {
+              return {
+                background: "#f3f4f6",
+                color: "#6b7280",
+              };
+            }
+
+            // Función para generar un hash del string
+            const hashString = (str) => {
+              let hash = 0;
+              for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash = hash & hash; // Convert to 32bit integer
+              }
+              return Math.abs(hash);
+            };
+
+            // Generar colores basados en el hash del modo
+            const hash = hashString(mode);
+
+            // Paleta de colores pastel para backgrounds
+            const backgrounds = [
+              "#e0f2fe", // azul claro
+              "#d1fae5", // verde claro
+              "#fef3c7", // amarillo claro
+              "#fce7f3", // rosa claro
+              "#e9d5ff", // morado claro
+              "#fecaca", // rojo claro
+              "#cffafe", // cyan claro
+              "#ddd6fe", // índigo claro
+              "#fed7aa", // naranja claro
+              "#f0f9ff", // azul muy claro
+              "#ecfdf5", // verde muy claro
+              "#fffbeb", // amarillo muy claro
+            ];
+
+            // Paleta de colores oscuros para texto
+            const textColors = [
+              "#0369a1", // azul oscuro
+              "#065f46", // verde oscuro
+              "#92400e", // amarillo oscuro
+              "#9f1239", // rosa oscuro
+              "#6b21a8", // morado oscuro
+              "#991b1b", // rojo oscuro
+              "#0e7490", // cyan oscuro
+              "#5b21b6", // índigo oscuro
+              "#9a3412", // naranja oscuro
+              "#075985", // azul muy oscuro
+              "#047857", // verde muy oscuro
+              "#78350f", // amarillo muy oscuro
+            ];
+
+            const bgIndex = hash % backgrounds.length;
+            const textIndex = hash % textColors.length;
+
+            return {
+              background: backgrounds[bgIndex],
+              color: textColors[textIndex],
+            };
           },
         },
       }).mount("#app");
