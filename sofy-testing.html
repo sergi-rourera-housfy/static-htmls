@@ -2,43 +2,773 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>Página de Prueba Sofy</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sofy Test Results Viewer</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 40px;
-        background: #f7f7f7;
-        color: #222;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-      header,
-      footer {
-        background: #4caf50;
-        color: #fff;
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #f5f7fa;
+        color: #333;
         padding: 20px;
       }
-      main {
-        background: #fff;
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #11aefa 0%, #0d8fd9 100%);
+        color: white;
         padding: 30px;
-        margin-top: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(17, 174, 250, 0.2);
+      }
+
+      .header h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+
+      .execution-input {
+        background: white;
+        padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .execution-input input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #11aefa;
+        border-radius: 6px;
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      .execution-input button {
+        background: #11aefa;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+      }
+
+      .execution-input button:hover {
+        background: #0d8fd9;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .summary-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .summary-card h3 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .summary-card .value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #11aefa;
+      }
+
+      .summary-card.success .value {
+        color: #10b981;
+      }
+
+      .summary-card.partial .value {
+        color: #f59e0b;
+      }
+
+      .summary-card.failed .value {
+        color: #ef4444;
+      }
+
+      .tests-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .test-item {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .test-item:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .test-item.expanded {
+        box-shadow: 0 4px 12px rgba(17, 174, 250, 0.2);
+      }
+
+      .test-header {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .test-header-left {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .test-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #333;
+      }
+
+      .test-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .test-badge.success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .test-badge.partial {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .test-badge.failed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .test-stats {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .test-duration {
+        padding: 4px 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+      }
+
+      .test-percentage {
+        font-weight: 600;
+        min-width: 50px;
+        text-align: right;
+      }
+
+      .test-details {
+        padding: 0 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, padding 0.3s;
+      }
+
+      .test-item.expanded .test-details {
+        padding: 20px;
+        max-height: 2000px;
+      }
+
+      .details-section {
+        margin-bottom: 20px;
+      }
+
+      .details-section h4 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .profile-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 6px;
+      }
+
+      .profile-item {
+        font-size: 14px;
+      }
+
+      .profile-item strong {
+        color: #666;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .asserts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .assert-item {
+        padding: 16px;
+        background: #f9fafb;
+        border-radius: 6px;
+        border-left: 4px solid #e5e7eb;
+      }
+
+      .assert-item.success {
+        border-left-color: #10b981;
+        background: #f0fdf4;
+      }
+
+      .assert-item.failed {
+        border-left-color: #ef4444;
+        background: #fef2f2;
+      }
+
+      .assert-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .assert-type {
+        font-weight: 600;
+        color: #333;
+        text-transform: capitalize;
+      }
+
+      .assert-status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .assert-status.success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .assert-status.failed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .assert-content {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+      }
+
+      .assert-content strong {
+        color: #333;
+      }
+
+      .assert-field {
+        margin-bottom: 6px;
+        line-height: 1.5;
+      }
+
+      .assert-field strong {
+        display: inline-block;
+        min-width: 80px;
+        color: #666;
+      }
+
+      .view-interaction-btn {
+        background: #11aefa;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+        margin-top: 16px;
+      }
+
+      .view-interaction-btn:hover {
+        background: #0d8fd9;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+      }
+
+      .modal-header h2 {
+        font-size: 20px;
+        color: #333;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+
+      .modal-close:hover {
+        background: #f3f4f6;
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .conversation {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .message {
+        padding: 16px;
+        border-radius: 8px;
+        max-width: 80%;
+      }
+
+      .message.user {
+        background: #11aefa;
+        color: white;
+        align-self: flex-end;
+      }
+
+      .message.assistant {
+        background: #f3f4f6;
+        color: #333;
+        align-self: flex-start;
+      }
+
+      .message-header {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .message-content {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+
+      .error {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>Bienvenido a Sofy Testing</h1>
-    </header>
-    <main>
-      <h2>¡Esta es una plantilla básica de HTML!</h2>
-      <p>Puedes usar esta estructura para comenzar tus desarrollos web.</p>
-      <ul>
-        <li>Fácil de modificar</li>
-        <li>Diseño limpio y simple</li>
-        <li>Compatible con dispositivos móviles</li>
-      </ul>
-    </main>
-    <footer>&copy; 2024 Sofy Testing. Todos los derechos reservados.</footer>
+    <div id="app">
+      <div class="container">
+        <div class="header">
+          <h1>🧪 Sofy Test Results Viewer</h1>
+          <p v-if="execution">Execution ID: {{ execution }}</p>
+        </div>
+
+        <div v-if="!execution" class="execution-input">
+          <input
+            type="text"
+            v-model="inputExecution"
+            placeholder="Ingresa el Execution ID"
+            @keyup.enter="setExecution"
+          />
+          <button @click="setExecution">Cargar Tests</button>
+        </div>
+
+        <div v-if="error" class="error">{{ error }}</div>
+
+        <div v-if="loading" class="loading">Cargando tests...</div>
+
+        <div v-if="tests && tests.length > 0">
+          <div class="summary">
+            <div class="summary-card">
+              <h3>Total Tests</h3>
+              <div class="value">{{ tests.length }}</div>
+            </div>
+            <div class="summary-card success">
+              <h3>Exitosos</h3>
+              <div class="value">{{ summary.success }}</div>
+            </div>
+            <div class="summary-card partial">
+              <h3>Parciales</h3>
+              <div class="value">{{ summary.partial }}</div>
+            </div>
+            <div class="summary-card failed">
+              <h3>Fallidos</h3>
+              <div class="value">{{ summary.failed }}</div>
+            </div>
+          </div>
+
+          <div class="tests-list">
+            <div
+              v-for="(test, index) in tests"
+              :key="test.testIdentifier"
+              class="test-item"
+              :class="{ expanded: expandedTest === index }"
+              @click="toggleTest(index)"
+            >
+              <div class="test-header">
+                <div class="test-header-left">
+                  <span class="test-name">{{ test.testName }}</span>
+                </div>
+                <div class="test-stats">
+                  <span class="test-duration">{{ test.testDuration }}</span>
+                  <span class="test-percentage">
+                    {{ (test.assertPercentage * 100).toFixed(0) }}%
+                  </span>
+                  <span
+                    >{{ test.assertCompletion.success }}/{{
+                    test.assertCompletion.total }}</span
+                  >
+                  <span class="test-badge" :class="getTestStatusClass(test)">
+                    {{ getTestStatusLabel(test) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="test-details" v-if="expandedTest === index">
+                <div class="details-section">
+                  <h4>Perfil de Usuario</h4>
+                  <div class="profile-info">
+                    <div class="profile-item">
+                      <strong>Nombre:</strong>
+                      {{ test.profile.firstName }} {{ test.profile.lastName }}
+                    </div>
+                    <div class="profile-item">
+                      <strong>Email:</strong>
+                      {{ test.profile.email }}
+                    </div>
+                    <div class="profile-item">
+                      <strong>Equipo:</strong>
+                      {{ test.profile.companyTeam }}
+                    </div>
+                    <div class="profile-item">
+                      <strong>Posición:</strong>
+                      {{ test.profile.companyPosition }}
+                    </div>
+                    <div class="profile-item">
+                      <strong>Roles:</strong>
+                      {{ test.profile.roles.join(', ') || 'Ninguno' }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="details-section">
+                  <h4>Input</h4>
+                  <div
+                    style="
+                      background: #f9fafb;
+                      padding: 12px;
+                      border-radius: 6px;
+                      font-size: 14px;
+                    "
+                  >
+                    {{ test.input }}
+                  </div>
+                </div>
+
+                <div class="details-section">
+                  <h4>
+                    Asserts ({{ test.assertCompletion.success }}/{{
+                    test.assertCompletion.total }})
+                  </h4>
+                  <div class="asserts-list">
+                    <div
+                      v-for="(assert, assertIndex) in test.assertDetails"
+                      :key="assertIndex"
+                      class="assert-item"
+                      :class="isAssertSuccess(assert) ? 'success' : 'failed'"
+                    >
+                      <div class="assert-header">
+                        <span class="assert-type">
+                          <span v-if="assert.mode">Modo</span>
+                          <span v-if="assert.count"
+                            >Evento {{ assert.type }}</span
+                          >
+                          <span v-if="assert.response">Respuesta</span>
+                        </span>
+                        <span
+                          class="assert-status"
+                          :class="isAssertSuccess(assert) ? 'success' : 'failed'"
+                        >
+                          {{ isAssertSuccess(assert) ? '✓ Éxito' : '✗ Fallido'
+                          }}
+                        </span>
+                      </div>
+                      <div class="assert-content">
+                        <div class="assert-field">
+                          <strong>Esperado:</strong>
+                          <span v-if="assert.mode"
+                            >{{ assert.mode.expected }}</span
+                          >
+                          <span v-if="assert.count"
+                            >Exactamente {{ assert.count.expectedExactly
+                            }}</span
+                          >
+                          <span v-if="assert.response"
+                            >{{ assert.response.expected }}</span
+                          >
+                        </div>
+                        <div class="assert-field">
+                          <strong>Resultado:</strong>
+                          <span v-if="assert.mode"
+                            >{{ assert.mode.result }}</span
+                          >
+                          <span v-if="assert.count"
+                            >{{ assert.count.result }}</span
+                          >
+                          <span v-if="assert.response"
+                            >{{ assert.response.result }}/10 ({{
+                            assert.response.resultReason }})</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  class="view-interaction-btn"
+                  @click.stop="openInteractionModal(test)"
+                >
+                  Ver Interacción
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Interacción -->
+      <div v-if="selectedTest" class="modal-overlay" @click="closeModal">
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <h2>{{ selectedTest.testName }}</h2>
+            <button class="modal-close" @click="closeModal">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="conversation">
+              <div class="message user">
+                <div class="message-header">Usuario</div>
+                <div class="message-content">{{ selectedTest.input }}</div>
+              </div>
+              <div
+                v-for="(event, eventIndex) in selectedTest.responseEvents"
+                :key="eventIndex"
+                class="message assistant"
+              >
+                <div class="message-header">{{ event.event_type }}</div>
+                <div class="message-content">{{ event.event_content }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            execution: null,
+            inputExecution: "",
+            tests: null,
+            loading: false,
+            error: null,
+            expandedTest: null,
+            selectedTest: null,
+          };
+        },
+        computed: {
+          summary() {
+            if (!this.tests) return { success: 0, partial: 0, failed: 0 };
+
+            let success = 0;
+            let partial = 0;
+            let failed = 0;
+
+            this.tests.forEach((test) => {
+              if (test.assertPercentage === 1) {
+                success++;
+              } else if (test.assertPercentage > 0) {
+                partial++;
+              } else {
+                failed++;
+              }
+            });
+
+            return { success, partial, failed };
+          },
+        },
+        mounted() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const executionParam = urlParams.get("execution");
+
+          if (executionParam) {
+            this.execution = executionParam;
+            this.loadTests();
+          }
+        },
+        methods: {
+          setExecution() {
+            if (this.inputExecution.trim()) {
+              const url = new URL(window.location.href);
+              url.searchParams.set("execution", this.inputExecution.trim());
+              window.location.href = url.toString();
+            }
+          },
+          async loadTests() {
+            if (!this.execution) return;
+
+            this.loading = true;
+            this.error = null;
+
+            try {
+              const response = await fetch(
+                `https://n8n.housfy.com/webhook/sofy/get-test-results?execution=${this.execution}`
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  `Error al cargar los tests: ${response.statusText}`
+                );
+              }
+
+              const data = await response.json();
+              this.tests = data.tests || [];
+            } catch (err) {
+              this.error = `Error al cargar los tests: ${err.message}`;
+              this.tests = null;
+            } finally {
+              this.loading = false;
+            }
+          },
+          toggleTest(index) {
+            this.expandedTest = this.expandedTest === index ? null : index;
+          },
+          getTestStatusClass(test) {
+            if (test.assertPercentage === 1) return "success";
+            if (test.assertPercentage > 0) return "partial";
+            return "failed";
+          },
+          getTestStatusLabel(test) {
+            if (test.assertPercentage === 1) return "Exitoso";
+            if (test.assertPercentage > 0) return "Parcial";
+            return "Fallido";
+          },
+          openInteractionModal(test) {
+            this.selectedTest = test;
+          },
+          closeModal() {
+            this.selectedTest = null;
+          },
+          isAssertSuccess(assert) {
+            if (assert.mode) {
+              return assert.mode.success === true;
+            }
+            if (assert.count) {
+              return assert.count.success === true;
+            }
+            if (assert.response) {
+              return assert.response.success === true;
+            }
+            return false;
+          },
+        },
+      }).mount("#app");
+    </script>
   </body>
 </html>
