@@ -704,271 +704,394 @@
       .radio-label span {
         user-select: none;
       }
+
+      .auth-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+      }
+
+      .auth-modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .auth-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .auth-modal-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .auth-modal-body {
+        padding: 20px;
+      }
+
+      .auth-modal-body p {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 16px;
+      }
+
+      .auth-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        transition: border-color 0.2s;
+        margin-bottom: 16px;
+      }
+
+      .auth-input:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .auth-modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
     </style>
   </head>
   <body>
     <div id="app">
-      <div class="top-header">
-        <div class="top-header-content">
-          <div class="logo-section">
-            <img
-              src="https://cms.housfy.com/assets/fe0f6198-fd34-4fd5-98c1-575fc312aa9b?width=100"
-              alt="Sofy Logo"
-            />
-            <button class="header-button" @click="goBack">
-              ←<span> Volver</span>
-            </button>
-            <span class="logo-text">Sofy - Testing</span>
+      <!-- Modal de Autenticación -->
+      <div v-if="showAuthModal" class="auth-modal-overlay">
+        <div class="auth-modal-content">
+          <div class="auth-modal-header">
+            <h3>🔐 Autenticación Requerida</h3>
           </div>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="main-content">
-          <h1 class="page-title">🧪 Test Execution</h1>
-          <p v-if="execution" class="execution-id">
-            Execution ID: {{ execution }}
-          </p>
-
-          <div v-if="status === 'Pending'" class="status-badge-container">
-            <p class="status-badge">
-              Falta {{numberOfTests - tests.length}} tests - Ejecutando...
+          <div class="auth-modal-body">
+            <p>
+              Por favor, introduce el header de autorización para continuar:
             </p>
-            <button class="status-badge-button" @click="loadTests">🔄</button>
-          </div>
-
-          <div v-if="error" class="error">{{ error }}</div>
-
-          <div v-if="loading" class="loading">Cargando tests...</div>
-
-          <div v-if="!loading && !error && tests && tests.length > 0">
-            <div class="summary">
-              <div class="summary-item failed">
-                <span class="label">Fallidos:</span>
-                <span class="value">{{ summary.failed }}</span>
-              </div>
-              <div class="summary-divider"></div>
-              <div class="summary-item partial">
-                <span class="label">Parciales:</span>
-                <span class="value">{{ summary.partial }}</span>
-              </div>
-              <div class="summary-divider"></div>
-              <div class="summary-item success">
-                <span class="label">Exitosos:</span>
-                <span class="value">{{ summary.success }}</span>
-              </div>
-              <div class="summary-divider"></div>
-              <div class="summary-item total">
-                <span class="label">Total:</span>
-                <span class="value">{{ filteredTests.length }}</span>
-              </div>
-            </div>
-
-            <div class="filters-section">
-              <div class="filters-row">
-                <input
-                  type="text"
-                  class="filter-input"
-                  placeholder="Buscar por nombre o input..."
-                  v-model="searchText"
-                />
-                <select class="filter-select" v-model="selectedMode">
-                  <option value="">Todos los modos</option>
-                  <option
-                    v-for="mode in availableModes"
-                    :key="mode"
-                    :value="mode"
-                  >
-                    {{ mode }}
-                  </option>
-                </select>
-                <div class="radio-buttons-group">
-                  <label class="radio-label">
-                    <input type="radio" value="all" v-model="errorFilter" />
-                    <span>Todos</span>
-                  </label>
-                  <label class="radio-label">
-                    <input
-                      type="radio"
-                      value="withErrors"
-                      v-model="errorFilter"
-                    />
-                    <span>Con Errores</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div class="tests-list">
-              <div
-                v-for="(test, index) in filteredTests"
-                :key="test.testIdentifier"
-                class="test-item"
-                :class="{ expanded: expandedTest === test.testIdentifier }"
-                @click="toggleTest(test.testIdentifier)"
+            <input
+              type="text"
+              v-model="authHeader"
+              class="auth-input"
+              placeholder="Header de autorización"
+              @keyup.enter="saveAuthHeader"
+              autofocus
+            />
+            <div class="auth-modal-actions">
+              <button
+                class="confirm-button confirm"
+                @click="saveAuthHeader"
+                :disabled="!authHeader || authHeader.trim() === ''"
+                style="
+                  padding: 10px 20px;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                  border: none;
+                  font-family: 'Manrope', sans-serif;
+                  background: #10b981;
+                  color: white;
+                "
               >
-                <div class="test-header">
-                  <div class="test-header-left">
-                    <span class="test-name">{{ test.testName }}</span>
-                  </div>
-                  <div class="test-stats">
-                    <span class="test-duration">{{ test.testDuration }}</span>
-                    <span class="test-percentage">
-                      {{ (test.assertPercentage).toFixed(0) }}%
-                    </span>
-                    <span class="test-asserts"
-                      >{{ test.assertCompletion.success }}/{{
-                      test.assertCompletion.total }}</span
-                    >
-                    <span class="test-badge" :class="getTestStatusClass(test)">
-                      {{ getTestStatusLabel(test) }}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  class="test-details"
-                  v-if="expandedTest === test.testIdentifier"
-                >
-                  <div class="details-section">
-                    <h4>Perfil de Usuario</h4>
-                    <div class="profile-info">
-                      <div class="profile-item">
-                        <strong>Nombre:</strong>
-                        {{ test.profile.firstName }} {{ test.profile.lastName }}
-                      </div>
-                      <div class="profile-item">
-                        <strong>Email:</strong>
-                        {{ test.profile.email }}
-                      </div>
-                      <div class="profile-item">
-                        <strong>Equipo:</strong>
-                        {{ test.profile.companyTeam }}
-                      </div>
-                      <div class="profile-item">
-                        <strong>Posición:</strong>
-                        {{ test.profile.companyPosition }}
-                      </div>
-                      <div class="profile-item">
-                        <strong>Roles:</strong>
-                        {{ test.profile.roles.join(', ') || 'Ninguno' }}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="details-section">
-                    <h4>Input</h4>
-                    <div
-                      style="
-                        background: #f9fafb;
-                        padding: 12px;
-                        border-radius: 6px;
-                        font-size: 14px;
-                      "
-                    >
-                      {{ test.input }}
-                    </div>
-                  </div>
-
-                  <div class="details-section">
-                    <h4>
-                      Asserts ({{ test.assertCompletion.success }}/{{
-                      test.assertCompletion.total }})
-                    </h4>
-                    <div class="asserts-list">
-                      <div
-                        v-for="(assert, assertIndex) in test.assertDetails"
-                        :key="assertIndex"
-                        class="assert-item"
-                        :class="isAssertSuccess(assert) ? 'success' : 'failed'"
-                      >
-                        <div class="assert-header">
-                          <span class="assert-type">
-                            <span v-if="assert.mode">Modo</span>
-                            <span v-if="assert.count"
-                              >Evento {{ assert.type }}</span
-                            >
-                            <span v-if="assert.response">Respuesta</span>
-                          </span>
-                          <span
-                            class="assert-status"
-                            :class="isAssertSuccess(assert) ? 'success' : 'failed'"
-                          >
-                            {{ isAssertSuccess(assert) ? '✓ Éxito' : '✗ Fallido'
-                            }}
-                          </span>
-                        </div>
-                        <div class="assert-content">
-                          <div class="assert-field">
-                            <strong>Esperado:</strong>
-                            <span v-if="assert.mode"
-                              >{{ assert.mode.expected }}</span
-                            >
-                            <span
-                              v-if="assert.count && assert.count.expectedExactly !== undefined"
-                              >Exactamente {{ assert.count.expectedExactly
-                              }}</span
-                            >
-                            <span
-                              v-if="assert.count && assert.count.expectedBetween"
-                              >Entre {{ assert.count.expectedBetween[0] }} y {{
-                              assert.count.expectedBetween[1] }}</span
-                            >
-                            <span v-if="assert.response"
-                              >{{ assert.response.expected }}</span
-                            >
-                          </div>
-                          <div class="assert-field">
-                            <strong>Resultado:</strong>
-                            <span v-if="assert.mode"
-                              >{{ assert.mode.result }}</span
-                            >
-                            <span v-if="assert.count"
-                              >{{ assert.count.result }}</span
-                            >
-                            <span v-if="assert.response"
-                              >{{ assert.response.result }}/10 ({{
-                              assert.response.resultReason }})</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    class="view-interaction-btn"
-                    @click.stop="openInteractionModal(test)"
-                  >
-                    Ver Interacción
-                  </button>
-                </div>
-              </div>
+                Guardar
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Modal de Interacción -->
-      <div v-if="selectedTest" class="modal-overlay" @click="closeModal">
-        <div class="modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>{{ selectedTest.testName }}</h2>
-            <button class="modal-close" @click="closeModal">×</button>
-          </div>
-          <div class="modal-body">
-            <div class="conversation">
-              <div class="message user">
-                <div class="message-header">Usuario</div>
-                <div class="message-content">{{ selectedTest.input }}</div>
-              </div>
-              <div
-                v-for="(event, eventIndex) in selectedTest.responseEvents"
-                :key="eventIndex"
-                class="message assistant"
+      <div v-if="!showAuthModal">
+        <div class="top-header">
+          <div class="top-header-content">
+            <div class="logo-section">
+              <img
+                src="https://cms.housfy.com/assets/fe0f6198-fd34-4fd5-98c1-575fc312aa9b?width=100"
+                alt="Sofy Logo"
+              />
+              <button class="header-button" @click="goBack">
+                ←<span> Volver</span>
+              </button>
+              <span class="logo-text">Sofy - Testing</span>
+            </div>
+            <div class="header-actions">
+              <button
+                class="header-button"
+                @click.stop="logout"
+                title="Cerrar sesión"
               >
-                <div class="message-header">{{ event.event_type }}</div>
-                <div class="message-content">{{ event.event_content }}</div>
+                🚪
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="container">
+          <div class="main-content">
+            <h1 class="page-title">🧪 Test Execution</h1>
+            <p v-if="execution" class="execution-id">
+              Execution ID: {{ execution }}
+            </p>
+
+            <div v-if="status === 'Pending'" class="status-badge-container">
+              <p class="status-badge">
+                Falta {{numberOfTests - tests.length}} tests - Ejecutando...
+              </p>
+              <button class="status-badge-button" @click="loadTests">🔄</button>
+            </div>
+
+            <div v-if="error" class="error">{{ error }}</div>
+
+            <div v-if="loading" class="loading">Cargando tests...</div>
+
+            <div v-if="!loading && !error && tests && tests.length > 0">
+              <div class="summary">
+                <div class="summary-item failed">
+                  <span class="label">Fallidos:</span>
+                  <span class="value">{{ summary.failed }}</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item partial">
+                  <span class="label">Parciales:</span>
+                  <span class="value">{{ summary.partial }}</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item success">
+                  <span class="label">Exitosos:</span>
+                  <span class="value">{{ summary.success }}</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item total">
+                  <span class="label">Total:</span>
+                  <span class="value">{{ filteredTests.length }}</span>
+                </div>
+              </div>
+
+              <div class="filters-section">
+                <div class="filters-row">
+                  <input
+                    type="text"
+                    class="filter-input"
+                    placeholder="Buscar por nombre o input..."
+                    v-model="searchText"
+                  />
+                  <select class="filter-select" v-model="selectedMode">
+                    <option value="">Todos los modos</option>
+                    <option
+                      v-for="mode in availableModes"
+                      :key="mode"
+                      :value="mode"
+                    >
+                      {{ mode }}
+                    </option>
+                  </select>
+                  <div class="radio-buttons-group">
+                    <label class="radio-label">
+                      <input type="radio" value="all" v-model="errorFilter" />
+                      <span>Todos</span>
+                    </label>
+                    <label class="radio-label">
+                      <input
+                        type="radio"
+                        value="withErrors"
+                        v-model="errorFilter"
+                      />
+                      <span>Con Errores</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tests-list">
+                <div
+                  v-for="(test, index) in filteredTests"
+                  :key="test.testIdentifier"
+                  class="test-item"
+                  :class="{ expanded: expandedTest === test.testIdentifier }"
+                  @click="toggleTest(test.testIdentifier)"
+                >
+                  <div class="test-header">
+                    <div class="test-header-left">
+                      <span class="test-name">{{ test.testName }}</span>
+                    </div>
+                    <div class="test-stats">
+                      <span class="test-duration">{{ test.testDuration }}</span>
+                      <span class="test-percentage">
+                        {{ (test.assertPercentage).toFixed(0) }}%
+                      </span>
+                      <span class="test-asserts"
+                        >{{ test.assertCompletion.success }}/{{
+                        test.assertCompletion.total }}</span
+                      >
+                      <span
+                        class="test-badge"
+                        :class="getTestStatusClass(test)"
+                      >
+                        {{ getTestStatusLabel(test) }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    class="test-details"
+                    v-if="expandedTest === test.testIdentifier"
+                  >
+                    <div class="details-section">
+                      <h4>Perfil de Usuario</h4>
+                      <div class="profile-info">
+                        <div class="profile-item">
+                          <strong>Nombre:</strong>
+                          {{ test.profile.firstName }} {{ test.profile.lastName
+                          }}
+                        </div>
+                        <div class="profile-item">
+                          <strong>Email:</strong>
+                          {{ test.profile.email }}
+                        </div>
+                        <div class="profile-item">
+                          <strong>Equipo:</strong>
+                          {{ test.profile.companyTeam }}
+                        </div>
+                        <div class="profile-item">
+                          <strong>Posición:</strong>
+                          {{ test.profile.companyPosition }}
+                        </div>
+                        <div class="profile-item">
+                          <strong>Roles:</strong>
+                          {{ test.profile.roles.join(', ') || 'Ninguno' }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="details-section">
+                      <h4>Input</h4>
+                      <div
+                        style="
+                          background: #f9fafb;
+                          padding: 12px;
+                          border-radius: 6px;
+                          font-size: 14px;
+                        "
+                      >
+                        {{ test.input }}
+                      </div>
+                    </div>
+
+                    <div class="details-section">
+                      <h4>
+                        Asserts ({{ test.assertCompletion.success }}/{{
+                        test.assertCompletion.total }})
+                      </h4>
+                      <div class="asserts-list">
+                        <div
+                          v-for="(assert, assertIndex) in test.assertDetails"
+                          :key="assertIndex"
+                          class="assert-item"
+                          :class="isAssertSuccess(assert) ? 'success' : 'failed'"
+                        >
+                          <div class="assert-header">
+                            <span class="assert-type">
+                              <span v-if="assert.mode">Modo</span>
+                              <span v-if="assert.count"
+                                >Evento {{ assert.type }}</span
+                              >
+                              <span v-if="assert.response">Respuesta</span>
+                            </span>
+                            <span
+                              class="assert-status"
+                              :class="isAssertSuccess(assert) ? 'success' : 'failed'"
+                            >
+                              {{ isAssertSuccess(assert) ? '✓ Éxito' : '✗
+                              Fallido' }}
+                            </span>
+                          </div>
+                          <div class="assert-content">
+                            <div class="assert-field">
+                              <strong>Esperado:</strong>
+                              <span v-if="assert.mode"
+                                >{{ assert.mode.expected }}</span
+                              >
+                              <span
+                                v-if="assert.count && assert.count.expectedExactly !== undefined"
+                                >Exactamente {{ assert.count.expectedExactly
+                                }}</span
+                              >
+                              <span
+                                v-if="assert.count && assert.count.expectedBetween"
+                                >Entre {{ assert.count.expectedBetween[0] }} y
+                                {{ assert.count.expectedBetween[1] }}</span
+                              >
+                              <span v-if="assert.response"
+                                >{{ assert.response.expected }}</span
+                              >
+                            </div>
+                            <div class="assert-field">
+                              <strong>Resultado:</strong>
+                              <span v-if="assert.mode"
+                                >{{ assert.mode.result }}</span
+                              >
+                              <span v-if="assert.count"
+                                >{{ assert.count.result }}</span
+                              >
+                              <span v-if="assert.response"
+                                >{{ assert.response.result }}/10 ({{
+                                assert.response.resultReason }})</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      class="view-interaction-btn"
+                      @click.stop="openInteractionModal(test)"
+                    >
+                      Ver Interacción
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Interacción -->
+        <div v-if="selectedTest" class="modal-overlay" @click="closeModal">
+          <div class="modal-content" @click.stop>
+            <div class="modal-header">
+              <h2>{{ selectedTest.testName }}</h2>
+              <button class="modal-close" @click="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="conversation">
+                <div class="message user">
+                  <div class="message-header">Usuario</div>
+                  <div class="message-content">{{ selectedTest.input }}</div>
+                </div>
+                <div
+                  v-for="(event, eventIndex) in selectedTest.responseEvents"
+                  :key="eventIndex"
+                  class="message assistant"
+                >
+                  <div class="message-header">{{ event.event_type }}</div>
+                  <div class="message-content">{{ event.event_content }}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -982,6 +1105,8 @@
       createApp({
         data() {
           return {
+            showAuthModal: false,
+            authHeader: "",
             execution: null,
             status: null,
             numberOfTests: null,
@@ -1069,6 +1194,13 @@
           },
         },
         mounted() {
+          // Verificar si existe el header en localStorage
+          const storedHeader = localStorage.getItem("sofy_testing_header");
+          if (!storedHeader) {
+            this.showAuthModal = true;
+            return;
+          }
+
           const urlParams = new URLSearchParams(window.location.search);
           const executionParam = urlParams.get("execution");
 
@@ -1082,11 +1214,42 @@
           }
         },
         methods: {
+          logout() {
+            localStorage.removeItem("sofy_testing_header");
+            this.authHeader = "";
+            this.showAuthModal = true;
+          },
+          saveAuthHeader() {
+            if (this.authHeader && this.authHeader.trim() !== "") {
+              localStorage.setItem(
+                "sofy_testing_header",
+                this.authHeader.trim()
+              );
+              this.showAuthModal = false;
+
+              const urlParams = new URLSearchParams(window.location.search);
+              const executionParam = urlParams.get("execution");
+
+              if (executionParam) {
+                this.execution = executionParam;
+                this.loadTests();
+                this.loadModes();
+              } else {
+                window.location.href = "test-executions.html";
+              }
+            }
+          },
           async loadModes() {
             this.loadingModes = true;
             try {
               const response = await fetch(
-                `https://n8n.housfy.com/webhook/sofy/get-admin-all-modes`
+                `https://n8n.housfy.com/webhook/sofy/get-admin-all-modes`,
+                {
+                  headers: {
+                    "x-sofy-testing-authorization":
+                      localStorage.getItem("sofy_testing_header") || "",
+                  },
+                }
               );
 
               if (!response.ok) {
@@ -1115,13 +1278,17 @@
 
             try {
               const response = await fetch(
-                `https://n8n.housfy.com/webhook/sofy/test-execution?execution=${this.execution}`
+                `https://n8n.housfy.com/webhook/sofy/test-execution?execution=${this.execution}`,
+                {
+                  headers: {
+                    "x-sofy-testing-authorization":
+                      localStorage.getItem("sofy_testing_header") || "",
+                  },
+                }
               );
 
               if (!response.ok) {
-                throw new Error(
-                  `Error al cargar los tests: ${response.statusText}`
-                );
+                throw new Error(`${response.statusText}`);
               }
 
               const data = await response.json();
@@ -1129,7 +1296,7 @@
               this.status = data.status || "Done";
               this.numberOfTests = data.numberOfTests || 0;
             } catch (err) {
-              this.error = `Error al cargar los tests: ${err.message}`;
+              this.error = `Error al cargar los tests ${err.message}`;
               this.tests = null;
             } finally {
               this.loading = false;

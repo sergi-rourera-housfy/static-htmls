@@ -823,551 +823,665 @@
           width: 100%;
         }
       }
+
+      .auth-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+      }
+
+      .auth-modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .auth-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .auth-modal-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .auth-modal-body {
+        padding: 20px;
+      }
+
+      .auth-modal-body p {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 16px;
+      }
+
+      .auth-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        transition: border-color 0.2s;
+        margin-bottom: 16px;
+      }
+
+      .auth-input:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .auth-modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
     </style>
   </head>
   <body>
     <div id="app">
-      <div class="top-header">
-        <div class="top-header-content">
-          <div class="logo-section">
-            <img
-              src="https://cms.housfy.com/assets/fe0f6198-fd34-4fd5-98c1-575fc312aa9b?width=100"
-              alt="Sofy Logo"
+      <!-- Modal de Autenticación -->
+      <div v-if="showAuthModal" class="auth-modal-overlay">
+        <div class="auth-modal-content">
+          <div class="auth-modal-header">
+            <h3>🔐 Autenticación Requerida</h3>
+          </div>
+          <div class="auth-modal-body">
+            <p>
+              Por favor, introduce el header de autorización para continuar:
+            </p>
+            <input
+              type="text"
+              v-model="authHeader"
+              class="auth-input"
+              placeholder="Header de autorización"
+              @keyup.enter="saveAuthHeader"
+              autofocus
             />
-            <span class="logo-text">Sofy - Testing</span>
-          </div>
-          <div class="header-actions">
-            <button class="header-button" @click.stop="addTest">
-              🧬<span> Añadir test</span>
-            </button>
-            <button class="header-button" @click.stop="viewExecutions">
-              👀<span> Ver ejecuciones</span>
-            </button>
-            <button class="header-button run-all" @click.stop="runAllTests">
-              ▶<span> Ejecutar todos los tests</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="main-content">
-          <h1 class="page-title">Tests</h1>
-          <p class="tests-count">
-            {{ filteredTests ? filteredTests.length : 0 }} tests configurados
-            <i style="font-size: 12px">
-              (Click en la tarjeta para ver los detalles)
-            </i>
-          </p>
-
-          <div v-if="tests && tests.length > 0" class="filters-section">
-            <div class="filters-row">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Buscar por nombre o input..."
-                v-model="searchText"
-              />
-              <select class="filter-select" v-model="selectedMode">
-                <option value="">Todos los modos</option>
-                <option
-                  v-for="mode in availableModes"
-                  :key="mode"
-                  :value="mode"
-                >
-                  {{ mode }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div v-if="error" class="error">{{ error }}</div>
-
-          <div v-if="loading" class="loading">Cargando tests...</div>
-
-          <div
-            v-if="!loading && !error && tests && tests.length === 0"
-            class="empty-state"
-          >
-            <h3>No hay tests configurados</h3>
-            <p>No se encontraron tests configurados.</p>
-          </div>
-
-          <div
-            v-if="!loading && !error && tests && tests.length > 0 && filteredTests && filteredTests.length === 0"
-            class="empty-state"
-          >
-            <h3>No se encontraron tests</h3>
-            <p>No hay tests que coincidan con los filtros aplicados.</p>
-          </div>
-
-          <div
-            v-if="filteredTests && filteredTests.length > 0"
-            class="tests-list"
-          >
-            <div
-              v-for="(test, index) in filteredTests"
-              :key="test.testName || index"
-              class="test-item"
-              :class="{ expanded: expandedTestName === test.testName }"
-              @click="toggleTest(test.testName)"
-            >
-              <div class="test-header-row">
-                <div class="test-left">
-                  <div class="test-icon">🧬</div>
-                  <div class="test-info">
-                    <div class="test-name">
-                      {{ test.testName }}
-                      <div
-                        class="expected-mode-tag"
-                        :style="getModeTagStyle(test.expectedMode)"
-                      >
-                        {{ test.expectedMode }}
-                      </div>
-                    </div>
-                    <div class="test-input">{{ test.input }}</div>
-                  </div>
-                </div>
-                <div class="test-run-button" @click.stop="runTest(test)">▶</div>
-              </div>
-
-              <div
-                class="test-details"
-                v-if="expandedTestName === test.testName"
-              >
-                <div class="details-section">
-                  <h4>Input</h4>
-                  <div class="detail-item">{{ test.input }}</div>
-                </div>
-
-                <div class="details-section">
-                  <h4>Memory</h4>
-                  <div class="detail-item">{{ test.memory }}</div>
-                </div>
-
-                <div class="details-section">
-                  <h4>Modo Esperado</h4>
-                  <div class="detail-item">{{ test.expectedMode }}</div>
-                </div>
-
-                <div
-                  class="details-section"
-                  v-if="test.expectedEvents && test.expectedEvents.length > 0"
-                >
-                  <h4>Eventos Esperados</h4>
-                  <div class="events-list">
-                    <div
-                      v-for="(event, eventIndex) in test.expectedEvents"
-                      :key="eventIndex"
-                      class="event-item"
-                    >
-                      <strong>Evento {{ event.type }}:</strong>
-                      <span v-if="event.count.expectedExactly !== undefined">
-                        Exactamente {{ event.count.expectedExactly }}
-                      </span>
-                      <span v-if="event.count.expectedBetween">
-                        Entre {{ event.count.expectedBetween[0] }} y {{
-                        event.count.expectedBetween[1] }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="details-section" v-if="test.expectedResponse">
-                  <h4>Respuesta Esperada</h4>
-                  <div class="detail-item">{{ test.expectedResponse }}</div>
-                </div>
-
-                <div class="details-section" v-if="test.profile">
-                  <h4>Perfil Extra</h4>
-                  <div class="detail-item">
-                    <pre>{{ JSON.stringify(test.profile, null, 2) }}</pre>
-                  </div>
-                </div>
-
-                <div class="details-section">
-                  <div class="test-actions">
-                    <button
-                      class="test-action-btn edit-btn"
-                      @click.stop="editTest(test)"
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      class="test-action-btn delete-btn"
-                      @click.stop="deleteTest(test)"
-                    >
-                      🗑️ Eliminar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal de Confirmación -->
-      <div
-        v-if="confirmModal.show"
-        class="confirm-modal-overlay"
-        @click="cancelConfirm"
-      >
-        <div class="confirm-modal-content" @click.stop>
-          <div class="confirm-modal-header">
-            <h3>{{ confirmModal.title }}</h3>
-          </div>
-          <div class="confirm-modal-body">
-            <p>{{ confirmModal.message }}</p>
-            <div class="confirm-modal-actions">
-              <button
-                class="confirm-button cancel"
-                @click="cancelConfirm"
-                :disabled="confirmModal.loading"
-              >
-                Cancelar
-              </button>
+            <div class="auth-modal-actions">
               <button
                 class="confirm-button confirm"
-                :class="{ loading: confirmModal.loading }"
-                @click="executeConfirmed"
-                :disabled="confirmModal.loading"
+                @click="saveAuthHeader"
+                :disabled="!authHeader || authHeader.trim() === ''"
               >
-                {{ confirmModal.loading ? confirmModal.action === "delete" ?
-                "Eliminando..." : "Ejecutando..." : confirmModal.action ===
-                "delete" ? "Eliminar" : "Ejecutar" }}
+                Guardar
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Modal de Añadir Test -->
-      <div
-        v-if="addTestModal.show"
-        class="confirm-modal-overlay"
-        @click="cancelAddTest"
-      >
-        <div class="add-test-modal-content" @click.stop>
-          <div class="confirm-modal-header">
-            <h3>{{ addTestModalTitle }}</h3>
-          </div>
-          <div class="add-test-modal-body">
-            <div class="form-group">
-              <label for="testName"
-                >Nombre del Test <span class="required-asterisk">*</span></label
-              >
-              <input
-                id="testName"
-                type="text"
-                v-model="addTestModal.form.testName"
-                placeholder="Ej: Saludo"
-                class="form-input"
-                :class="{ 'form-input-error': addTestModal.fieldErrors.testName }"
-                :disabled="addTestModal.loading"
-                @blur="validateField('testName')"
+      <div v-if="!showAuthModal">
+        <div class="top-header">
+          <div class="top-header-content">
+            <div class="logo-section">
+              <img
+                src="https://cms.housfy.com/assets/fe0f6198-fd34-4fd5-98c1-575fc312aa9b?width=100"
+                alt="Sofy Logo"
               />
-              <span
-                v-if="addTestModal.fieldErrors.testName"
-                class="field-error"
-              >
-                {{ addTestModal.fieldErrors.testName }}
-              </span>
+              <span class="logo-text">Sofy - Testing</span>
             </div>
-
-            <div class="form-group">
-              <label for="mode"
-                >Modo <span class="required-asterisk">*</span></label
+            <div class="header-actions">
+              <button class="header-button" @click.stop="addTest">
+                🧬<span> Añadir test</span>
+              </button>
+              <button class="header-button" @click.stop="viewExecutions">
+                👀<span> Ver ejecuciones</span>
+              </button>
+              <button class="header-button run-all" @click.stop="runAllTests">
+                ▶<span> Ejecutar todos los tests</span>
+              </button>
+              <button
+                class="header-button"
+                @click.stop="logout"
+                title="Cerrar sesión"
               >
-              <select
-                id="mode"
-                v-model="addTestModal.form.mode"
-                class="form-select"
-                :class="{ 'form-input-error': addTestModal.fieldErrors.mode }"
-                :disabled="addTestModal.loading || loadingModes"
-                @blur="validateField('mode')"
-              >
-                <option value="">Selecciona un modo</option>
-                <option
-                  v-for="mode in modes"
-                  :key="mode.code"
-                  :value="mode.code"
-                >
-                  {{ mode.label }}
-                </option>
-              </select>
-              <span v-if="addTestModal.fieldErrors.mode" class="field-error">
-                {{ addTestModal.fieldErrors.mode }}
-              </span>
+                🚪
+              </button>
             </div>
+          </div>
+        </div>
 
-            <div class="form-group">
-              <label for="input"
-                >Input <span class="required-asterisk">*</span></label
-              >
-              <textarea
-                id="input"
-                v-model="addTestModal.form.input"
-                placeholder="Ej: Hola!!"
-                class="form-textarea"
-                :class="{ 'form-input-error': addTestModal.fieldErrors.input }"
-                rows="3"
-                :disabled="addTestModal.loading"
-                @blur="validateField('input')"
-              ></textarea>
-              <span v-if="addTestModal.fieldErrors.input" class="field-error">
-                {{ addTestModal.fieldErrors.input }}
-              </span>
-            </div>
+        <div class="container">
+          <div class="main-content">
+            <h1 class="page-title">Tests</h1>
+            <p class="tests-count">
+              {{ filteredTests ? filteredTests.length : 0 }} tests configurados
+              <i style="font-size: 12px">
+                (Click en la tarjeta para ver los detalles)
+              </i>
+            </p>
 
-            <div class="form-group">
-              <label for="memory">Memory</label>
-              <textarea
-                id="memory"
-                v-model="addTestModal.form.memory"
-                placeholder="Memory del test (opcional)"
-                class="form-textarea"
-                rows="2"
-                :disabled="addTestModal.loading"
-              ></textarea>
-              <small class="form-hint"
-                >Formato: Human: Hola\nAI: Hola Xabier! 😊</small
-              >
-            </div>
-
-            <div class="form-group">
-              <label for="profile"
-                >Profile (JSON) <span class="required-asterisk">*</span></label
-              >
-              <textarea
-                id="profile"
-                v-model="addTestModal.form.profile"
-                placeholder='{"roles": [309]}'
-                class="form-textarea form-textarea-code"
-                :class="{ 'form-input-error': addTestModal.fieldErrors.profile }"
-                rows="4"
-                :disabled="addTestModal.loading"
-                @blur="validateField('profile')"
-              ></textarea>
-              <small class="form-hint"
-                >Formato JSON. Ejemplo: {"roles": [309]}</small
-              >
-              <span v-if="addTestModal.fieldErrors.profile" class="field-error">
-                {{ addTestModal.fieldErrors.profile }}
-              </span>
-            </div>
-
-            <div class="form-group">
-              <label for="expectedMode"
-                >Expected Mode <span class="required-asterisk">*</span></label
-              >
-              <select
-                id="expectedMode"
-                v-model="addTestModal.form.expectedMode"
-                class="form-select"
-                :class="{ 'form-input-error': addTestModal.fieldErrors.expectedMode }"
-                :disabled="addTestModal.loading || loadingModes"
-                @blur="validateField('expectedMode')"
-              >
-                <option value="">Selecciona un modo esperado</option>
-                <option value="Fallback">Fallback</option>
-                <option
-                  v-for="mode in filteredModesForExpected"
-                  :key="mode.code"
-                  :value="mode.label"
-                >
-                  {{ mode.label }}
-                </option>
-              </select>
-              <span
-                v-if="addTestModal.fieldErrors.expectedMode"
-                class="field-error"
-              >
-                {{ addTestModal.fieldErrors.expectedMode }}
-              </span>
-            </div>
-
-            <div class="form-group">
-              <label
-                >Expected Events <span class="required-asterisk">*</span></label
-              >
-              <div
-                v-if="addTestModal.fieldErrors.expectedEvents"
-                class="field-error"
-                style="margin-bottom: 12px"
-              >
-                {{ addTestModal.fieldErrors.expectedEvents }}
+            <div v-if="tests && tests.length > 0" class="filters-section">
+              <div class="filters-row">
+                <input
+                  type="text"
+                  class="filter-input"
+                  placeholder="Buscar por nombre o input..."
+                  v-model="searchText"
+                />
+                <select class="filter-select" v-model="selectedMode">
+                  <option value="">Todos los modos</option>
+                  <option
+                    v-for="mode in availableModes"
+                    :key="mode"
+                    :value="mode"
+                  >
+                    {{ mode }}
+                  </option>
+                </select>
               </div>
-              <div class="asserts-container">
-                <div
-                  v-for="(assert, index) in addTestModal.form.expectedEvents"
-                  :key="index"
-                  class="assert-item-form"
-                  :class="{ 'assert-item-error': hasAssertError(index) }"
-                >
-                  <div class="assert-item-header">
-                    <span class="assert-item-number"
-                      >Assert {{ index + 1 }}</span
-                    >
-                    <button
-                      type="button"
-                      class="assert-remove-btn"
-                      @click="removeAssert(index)"
-                      :disabled="addTestModal.loading"
-                    >
-                      ✕
-                    </button>
+            </div>
+
+            <div v-if="error" class="error">{{ error }}</div>
+
+            <div v-if="loading" class="loading">Cargando tests...</div>
+
+            <div
+              v-if="!loading && !error && tests && tests.length === 0"
+              class="empty-state"
+            >
+              <h3>No hay tests configurados</h3>
+              <p>No se encontraron tests configurados.</p>
+            </div>
+
+            <div
+              v-if="!loading && !error && tests && tests.length > 0 && filteredTests && filteredTests.length === 0"
+              class="empty-state"
+            >
+              <h3>No se encontraron tests</h3>
+              <p>No hay tests que coincidan con los filtros aplicados.</p>
+            </div>
+
+            <div
+              v-if="filteredTests && filteredTests.length > 0"
+              class="tests-list"
+            >
+              <div
+                v-for="(test, index) in filteredTests"
+                :key="test.testName || index"
+                class="test-item"
+                :class="{ expanded: expandedTestName === test.testName }"
+                @click="toggleTest(test.testName)"
+              >
+                <div class="test-header-row">
+                  <div class="test-left">
+                    <div class="test-icon">🧬</div>
+                    <div class="test-info">
+                      <div class="test-name">
+                        {{ test.testName }}
+                        <div
+                          class="expected-mode-tag"
+                          :style="getModeTagStyle(test.expectedMode)"
+                        >
+                          {{ test.expectedMode }}
+                        </div>
+                      </div>
+                      <div class="test-input">{{ test.input }}</div>
+                    </div>
                   </div>
-                  <div class="assert-item-body">
-                    <div class="assert-field-row">
-                      <div class="assert-field">
-                        <label
-                          >Type <span class="required-asterisk">*</span></label
-                        >
-                        <input
-                          type="text"
-                          v-model="assert.type"
-                          placeholder="Ej: ia_message"
-                          class="form-input"
-                          :class="{ 'form-input-error': hasAssertFieldError(index, 'type') }"
-                          :disabled="addTestModal.loading"
-                          @blur="validateAssertField(index, 'type')"
-                        />
-                        <span
-                          v-if="hasAssertFieldError(index, 'type')"
-                          class="field-error"
-                          style="font-size: 12px; margin-top: 4px"
-                        >
-                          {{ getAssertFieldError(index, 'type') }}
+                  <div class="test-run-button" @click.stop="runTest(test)">
+                    ▶
+                  </div>
+                </div>
+
+                <div
+                  class="test-details"
+                  v-if="expandedTestName === test.testName"
+                >
+                  <div class="details-section">
+                    <h4>Input</h4>
+                    <div class="detail-item">{{ test.input }}</div>
+                  </div>
+
+                  <div class="details-section">
+                    <h4>Memory</h4>
+                    <div class="detail-item">{{ test.memory }}</div>
+                  </div>
+
+                  <div class="details-section">
+                    <h4>Modo Esperado</h4>
+                    <div class="detail-item">{{ test.expectedMode }}</div>
+                  </div>
+
+                  <div
+                    class="details-section"
+                    v-if="test.expectedEvents && test.expectedEvents.length > 0"
+                  >
+                    <h4>Eventos Esperados</h4>
+                    <div class="events-list">
+                      <div
+                        v-for="(event, eventIndex) in test.expectedEvents"
+                        :key="eventIndex"
+                        class="event-item"
+                      >
+                        <strong>Evento {{ event.type }}:</strong>
+                        <span v-if="event.count.expectedExactly !== undefined">
+                          Exactamente {{ event.count.expectedExactly }}
+                        </span>
+                        <span v-if="event.count.expectedBetween">
+                          Entre {{ event.count.expectedBetween[0] }} y {{
+                          event.count.expectedBetween[1] }}
                         </span>
                       </div>
-                      <div class="assert-field">
-                        <label>Assert Type</label>
-                        <select
-                          v-model="assert.assertType"
-                          class="form-select"
-                          :disabled="addTestModal.loading"
-                        >
-                          <option value="count">Count</option>
-                        </select>
-                      </div>
                     </div>
-                    <div
-                      v-if="assert.assertType === 'count'"
-                      class="count-options"
-                    >
-                      <div class="count-option-row">
-                        <label class="count-option-label">
+                  </div>
+
+                  <div class="details-section" v-if="test.expectedResponse">
+                    <h4>Respuesta Esperada</h4>
+                    <div class="detail-item">{{ test.expectedResponse }}</div>
+                  </div>
+
+                  <div class="details-section" v-if="test.profile">
+                    <h4>Perfil Extra</h4>
+                    <div class="detail-item">
+                      <pre>{{ JSON.stringify(test.profile, null, 2) }}</pre>
+                    </div>
+                  </div>
+
+                  <div class="details-section">
+                    <div class="test-actions">
+                      <button
+                        class="test-action-btn edit-btn"
+                        @click.stop="editTest(test)"
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        class="test-action-btn delete-btn"
+                        @click.stop="deleteTest(test)"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Confirmación -->
+        <div
+          v-if="confirmModal.show"
+          class="confirm-modal-overlay"
+          @click="cancelConfirm"
+        >
+          <div class="confirm-modal-content" @click.stop>
+            <div class="confirm-modal-header">
+              <h3>{{ confirmModal.title }}</h3>
+            </div>
+            <div class="confirm-modal-body">
+              <p>{{ confirmModal.message }}</p>
+              <div class="confirm-modal-actions">
+                <button
+                  class="confirm-button cancel"
+                  @click="cancelConfirm"
+                  :disabled="confirmModal.loading"
+                >
+                  Cancelar
+                </button>
+                <button
+                  class="confirm-button confirm"
+                  :class="{ loading: confirmModal.loading }"
+                  @click="executeConfirmed"
+                  :disabled="confirmModal.loading"
+                >
+                  {{ confirmModal.loading ? confirmModal.action === "delete" ?
+                  "Eliminando..." : "Ejecutando..." : confirmModal.action ===
+                  "delete" ? "Eliminar" : "Ejecutar" }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Añadir Test -->
+        <div
+          v-if="addTestModal.show"
+          class="confirm-modal-overlay"
+          @click="cancelAddTest"
+        >
+          <div class="add-test-modal-content" @click.stop>
+            <div class="confirm-modal-header">
+              <h3>{{ addTestModalTitle }}</h3>
+            </div>
+            <div class="add-test-modal-body">
+              <div class="form-group">
+                <label for="testName"
+                  >Nombre del Test
+                  <span class="required-asterisk">*</span></label
+                >
+                <input
+                  id="testName"
+                  type="text"
+                  v-model="addTestModal.form.testName"
+                  placeholder="Ej: Saludo"
+                  class="form-input"
+                  :class="{ 'form-input-error': addTestModal.fieldErrors.testName }"
+                  :disabled="addTestModal.loading"
+                  @blur="validateField('testName')"
+                />
+                <span
+                  v-if="addTestModal.fieldErrors.testName"
+                  class="field-error"
+                >
+                  {{ addTestModal.fieldErrors.testName }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="mode"
+                  >Modo <span class="required-asterisk">*</span></label
+                >
+                <select
+                  id="mode"
+                  v-model="addTestModal.form.mode"
+                  class="form-select"
+                  :class="{ 'form-input-error': addTestModal.fieldErrors.mode }"
+                  :disabled="addTestModal.loading || loadingModes"
+                  @blur="validateField('mode')"
+                >
+                  <option value="">Selecciona un modo</option>
+                  <option
+                    v-for="mode in modes"
+                    :key="mode.code"
+                    :value="mode.code"
+                  >
+                    {{ mode.label }}
+                  </option>
+                </select>
+                <span v-if="addTestModal.fieldErrors.mode" class="field-error">
+                  {{ addTestModal.fieldErrors.mode }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="input"
+                  >Input <span class="required-asterisk">*</span></label
+                >
+                <textarea
+                  id="input"
+                  v-model="addTestModal.form.input"
+                  placeholder="Ej: Hola!!"
+                  class="form-textarea"
+                  :class="{ 'form-input-error': addTestModal.fieldErrors.input }"
+                  rows="3"
+                  :disabled="addTestModal.loading"
+                  @blur="validateField('input')"
+                ></textarea>
+                <span v-if="addTestModal.fieldErrors.input" class="field-error">
+                  {{ addTestModal.fieldErrors.input }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="memory">Memory</label>
+                <textarea
+                  id="memory"
+                  v-model="addTestModal.form.memory"
+                  placeholder="Memory del test (opcional)"
+                  class="form-textarea"
+                  rows="2"
+                  :disabled="addTestModal.loading"
+                ></textarea>
+                <small class="form-hint"
+                  >Formato: Human: Hola\nAI: Hola Xabier! 😊</small
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="profile"
+                  >Profile (JSON)
+                  <span class="required-asterisk">*</span></label
+                >
+                <textarea
+                  id="profile"
+                  v-model="addTestModal.form.profile"
+                  placeholder='{"roles": [309]}'
+                  class="form-textarea form-textarea-code"
+                  :class="{ 'form-input-error': addTestModal.fieldErrors.profile }"
+                  rows="4"
+                  :disabled="addTestModal.loading"
+                  @blur="validateField('profile')"
+                ></textarea>
+                <small class="form-hint"
+                  >Formato JSON. Ejemplo: {"roles": [309]}</small
+                >
+                <span
+                  v-if="addTestModal.fieldErrors.profile"
+                  class="field-error"
+                >
+                  {{ addTestModal.fieldErrors.profile }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="expectedMode"
+                  >Expected Mode <span class="required-asterisk">*</span></label
+                >
+                <select
+                  id="expectedMode"
+                  v-model="addTestModal.form.expectedMode"
+                  class="form-select"
+                  :class="{ 'form-input-error': addTestModal.fieldErrors.expectedMode }"
+                  :disabled="addTestModal.loading || loadingModes"
+                  @blur="validateField('expectedMode')"
+                >
+                  <option value="">Selecciona un modo esperado</option>
+                  <option value="Fallback">Fallback</option>
+                  <option
+                    v-for="mode in filteredModesForExpected"
+                    :key="mode.code"
+                    :value="mode.label"
+                  >
+                    {{ mode.label }}
+                  </option>
+                </select>
+                <span
+                  v-if="addTestModal.fieldErrors.expectedMode"
+                  class="field-error"
+                >
+                  {{ addTestModal.fieldErrors.expectedMode }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label
+                  >Expected Events
+                  <span class="required-asterisk">*</span></label
+                >
+                <div
+                  v-if="addTestModal.fieldErrors.expectedEvents"
+                  class="field-error"
+                  style="margin-bottom: 12px"
+                >
+                  {{ addTestModal.fieldErrors.expectedEvents }}
+                </div>
+                <div class="asserts-container">
+                  <div
+                    v-for="(assert, index) in addTestModal.form.expectedEvents"
+                    :key="index"
+                    class="assert-item-form"
+                    :class="{ 'assert-item-error': hasAssertError(index) }"
+                  >
+                    <div class="assert-item-header">
+                      <span class="assert-item-number"
+                        >Assert {{ index + 1 }}</span
+                      >
+                      <button
+                        type="button"
+                        class="assert-remove-btn"
+                        @click="removeAssert(index)"
+                        :disabled="addTestModal.loading"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div class="assert-item-body">
+                      <div class="assert-field-row">
+                        <div class="assert-field">
+                          <label
+                            >Type
+                            <span class="required-asterisk">*</span></label
+                          >
                           <input
-                            type="radio"
-                            :value="'exactly'"
-                            v-model="assert.countType"
+                            type="text"
+                            v-model="assert.type"
+                            placeholder="Ej: ia_message"
+                            class="form-input"
+                            :class="{ 'form-input-error': hasAssertFieldError(index, 'type') }"
                             :disabled="addTestModal.loading"
+                            @blur="validateAssertField(index, 'type')"
                           />
-                          Exactly
-                        </label>
-                        <input
-                          v-if="assert.countType === 'exactly'"
-                          type="number"
-                          v-model.number="assert.exactly"
-                          placeholder="Número"
-                          class="form-input count-input"
-                          :disabled="addTestModal.loading"
-                          min="0"
-                        />
+                          <span
+                            v-if="hasAssertFieldError(index, 'type')"
+                            class="field-error"
+                            style="font-size: 12px; margin-top: 4px"
+                          >
+                            {{ getAssertFieldError(index, 'type') }}
+                          </span>
+                        </div>
+                        <div class="assert-field">
+                          <label>Assert Type</label>
+                          <select
+                            v-model="assert.assertType"
+                            class="form-select"
+                            :disabled="addTestModal.loading"
+                          >
+                            <option value="count">Count</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="count-option-row">
-                        <label class="count-option-label">
+                      <div
+                        v-if="assert.assertType === 'count'"
+                        class="count-options"
+                      >
+                        <div class="count-option-row">
+                          <label class="count-option-label">
+                            <input
+                              type="radio"
+                              :value="'exactly'"
+                              v-model="assert.countType"
+                              :disabled="addTestModal.loading"
+                            />
+                            Exactly
+                          </label>
                           <input
-                            type="radio"
-                            :value="'between'"
-                            v-model="assert.countType"
-                            :disabled="addTestModal.loading"
-                          />
-                          Between
-                        </label>
-                        <div
-                          v-if="assert.countType === 'between'"
-                          class="between-inputs"
-                        >
-                          <input
+                            v-if="assert.countType === 'exactly'"
                             type="number"
-                            v-model.number="assert.betweenMin"
-                            placeholder="Min"
-                            class="form-input count-input"
-                            :disabled="addTestModal.loading"
-                            min="0"
-                          />
-                          <span class="between-separator">y</span>
-                          <input
-                            type="number"
-                            v-model.number="assert.betweenMax"
-                            placeholder="Max"
+                            v-model.number="assert.exactly"
+                            placeholder="Número"
                             class="form-input count-input"
                             :disabled="addTestModal.loading"
                             min="0"
                           />
                         </div>
+                        <div class="count-option-row">
+                          <label class="count-option-label">
+                            <input
+                              type="radio"
+                              :value="'between'"
+                              v-model="assert.countType"
+                              :disabled="addTestModal.loading"
+                            />
+                            Between
+                          </label>
+                          <div
+                            v-if="assert.countType === 'between'"
+                            class="between-inputs"
+                          >
+                            <input
+                              type="number"
+                              v-model.number="assert.betweenMin"
+                              placeholder="Min"
+                              class="form-input count-input"
+                              :disabled="addTestModal.loading"
+                              min="0"
+                            />
+                            <span class="between-separator">y</span>
+                            <input
+                              type="number"
+                              v-model.number="assert.betweenMax"
+                              placeholder="Max"
+                              class="form-input count-input"
+                              :disabled="addTestModal.loading"
+                              min="0"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    class="add-assert-btn"
+                    @click="addAssert"
+                    :disabled="addTestModal.loading"
+                  >
+                    + Añadir Assert
+                  </button>
                 </div>
+              </div>
+
+              <div class="form-group">
+                <label for="expectedResponse"
+                  >Expected Response
+                  <span class="required-asterisk">*</span></label
+                >
+                <textarea
+                  id="expectedResponse"
+                  v-model="addTestModal.form.expectedResponse"
+                  placeholder="Ej: Un simple saludo con algo de proactividad"
+                  class="form-textarea"
+                  :class="{ 'form-input-error': addTestModal.fieldErrors.expectedResponse }"
+                  rows="3"
+                  :disabled="addTestModal.loading"
+                  @blur="validateField('expectedResponse')"
+                ></textarea>
+                <span
+                  v-if="addTestModal.fieldErrors.expectedResponse"
+                  class="field-error"
+                >
+                  {{ addTestModal.fieldErrors.expectedResponse }}
+                </span>
+              </div>
+
+              <div v-if="addTestModal.error" class="form-error-message">
+                {{ addTestModal.error }}
+              </div>
+
+              <div class="confirm-modal-actions">
                 <button
-                  type="button"
-                  class="add-assert-btn"
-                  @click="addAssert"
+                  class="confirm-button cancel"
+                  @click="cancelAddTest"
                   :disabled="addTestModal.loading"
                 >
-                  + Añadir Assert
+                  Cancelar
+                </button>
+                <button
+                  class="confirm-button confirm"
+                  :class="{ loading: addTestModal.loading }"
+                  @click="submitAddTest"
+                  :disabled="addTestModal.loading"
+                >
+                  {{ addTestModal.loading ? addTestModal.isEditing ?
+                  "Actualizando..." : "Creando..." : addTestModal.isEditing ?
+                  "Actualizar Test" : "Crear Test" }}
                 </button>
               </div>
-            </div>
-
-            <div class="form-group">
-              <label for="expectedResponse"
-                >Expected Response
-                <span class="required-asterisk">*</span></label
-              >
-              <textarea
-                id="expectedResponse"
-                v-model="addTestModal.form.expectedResponse"
-                placeholder="Ej: Un simple saludo con algo de proactividad"
-                class="form-textarea"
-                :class="{ 'form-input-error': addTestModal.fieldErrors.expectedResponse }"
-                rows="3"
-                :disabled="addTestModal.loading"
-                @blur="validateField('expectedResponse')"
-              ></textarea>
-              <span
-                v-if="addTestModal.fieldErrors.expectedResponse"
-                class="field-error"
-              >
-                {{ addTestModal.fieldErrors.expectedResponse }}
-              </span>
-            </div>
-
-            <div v-if="addTestModal.error" class="form-error-message">
-              {{ addTestModal.error }}
-            </div>
-
-            <div class="confirm-modal-actions">
-              <button
-                class="confirm-button cancel"
-                @click="cancelAddTest"
-                :disabled="addTestModal.loading"
-              >
-                Cancelar
-              </button>
-              <button
-                class="confirm-button confirm"
-                :class="{ loading: addTestModal.loading }"
-                @click="submitAddTest"
-                :disabled="addTestModal.loading"
-              >
-                {{ addTestModal.loading ? addTestModal.isEditing ?
-                "Actualizando..." : "Creando..." : addTestModal.isEditing ?
-                "Actualizar Test" : "Crear Test" }}
-              </button>
             </div>
           </div>
         </div>
@@ -1380,6 +1494,8 @@
       createApp({
         data() {
           return {
+            showAuthModal: false,
+            authHeader: "",
             tests: null,
             loading: false,
             error: null,
@@ -1464,15 +1580,43 @@
           },
         },
         mounted() {
-          this.loadTests();
-          this.loadModes();
+          // Verificar si existe el header en localStorage
+          const storedHeader = localStorage.getItem("sofy_testing_header");
+          if (!storedHeader) {
+            this.showAuthModal = true;
+          } else {
+            this.loadTests();
+            this.loadModes();
+          }
         },
         methods: {
+          logout() {
+            localStorage.removeItem("sofy_testing_header");
+            this.authHeader = "";
+            this.showAuthModal = true;
+          },
+          saveAuthHeader() {
+            if (this.authHeader && this.authHeader.trim() !== "") {
+              localStorage.setItem(
+                "sofy_testing_header",
+                this.authHeader.trim()
+              );
+              this.showAuthModal = false;
+              this.loadTests();
+              this.loadModes();
+            }
+          },
           async loadModes() {
             this.loadingModes = true;
             try {
               const response = await fetch(
-                `https://n8n.housfy.com/webhook/sofy/get-admin-all-modes`
+                `https://n8n.housfy.com/webhook/sofy/get-admin-all-modes`,
+                {
+                  headers: {
+                    "x-sofy-testing-authorization":
+                      localStorage.getItem("sofy_testing_header") || "",
+                  },
+                }
               );
 
               if (!response.ok) {
@@ -1496,19 +1640,23 @@
 
             try {
               const response = await fetch(
-                `https://n8n.housfy.com/webhook/sofy/tests`
+                `https://n8n.housfy.com/webhook/sofy/tests`,
+                {
+                  headers: {
+                    "x-sofy-testing-authorization":
+                      localStorage.getItem("sofy_testing_header") || "",
+                  },
+                }
               );
 
               if (!response.ok) {
-                throw new Error(
-                  `Error al cargar los tests: ${response.statusText}`
-                );
+                throw new Error(`${response.statusText}`);
               }
 
               const data = await response.json();
               this.tests = data.tests || [];
             } catch (err) {
-              this.error = `Error al cargar los tests: ${err.message}`;
+              this.error = `Error al cargar los tests ${err.message}`;
               this.tests = null;
             } finally {
               this.loading = false;
@@ -1714,6 +1862,8 @@
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
+                      "x-sofy-testing-authorization":
+                        localStorage.getItem("sofy_testing_header") || "",
                     },
                     body: JSON.stringify({
                       testName: this.confirmModal.testName,
@@ -1749,6 +1899,8 @@
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
+                      "x-sofy-testing-authorization":
+                        localStorage.getItem("sofy_testing_header") || "",
                     },
                     body: body,
                   }
@@ -1967,6 +2119,8 @@
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
+                  "x-sofy-testing-authorization":
+                    localStorage.getItem("sofy_testing_header") || "",
                 },
                 body: JSON.stringify(body),
               });
