@@ -1016,8 +1016,7 @@
                               class="assert-status"
                               :class="isAssertSuccess(assert) ? 'success' : 'failed'"
                             >
-                              {{ isAssertSuccess(assert) ? '✓ Éxito' : '✗
-                              Fallido' }}
+                              {{ getAssertStatusText(assert) }}
                             </span>
                           </div>
                           <div class="assert-content">
@@ -1333,6 +1332,9 @@
               return assert.response.success === true;
             }
             return false;
+          },
+          getAssertStatusText(assert) {
+            return this.isAssertSuccess(assert) ? "✓ Éxito" : "✗ Fallido";
           },
         },
       }).mount("#app");
