@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sofy Tests Configurados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #ffffff;
+        color: #333;
+        padding: 0;
+        margin: 0;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+        width: 100%;
+        padding: 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .top-header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo-section img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
+
+      .logo-section .logo-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: #888b8e;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .header-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        color: #6c7e89;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 8px 16px;
+        transition: all 0.2s;
+        font-family: "Manrope", sans-serif;
+      }
+
+      .header-button:hover {
+        color: #11aefa;
+        border-color: #11aefa;
+      }
+
+      .header-button.run-all {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+      }
+
+      .header-button.run-all:hover {
+        background: #059669;
+        border-color: #059669;
+      }
+
+      .header-button span {
+        display: inline;
+      }
+
+      @media (max-width: 768px) {
+        .header-button {
+          padding: 8px;
+          min-width: 40px;
+          justify-content: center;
+        }
+
+        .header-button span {
+          display: none;
+        }
+      }
+
+      .main-content {
+        margin: 10px 0;
+      }
+
+      .page-title {
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: 0;
+        color: #111827;
+        margin-bottom: 8px;
+      }
+
+      .tests-count {
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 0;
+        color: #6c7e89;
+        margin-bottom: 30px;
+      }
+
+      .filters-section {
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .filters-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .filter-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        transition: border-color 0.2s;
+      }
+
+      .filter-input:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .filter-select {
+        min-width: 180px;
+        padding: 10px 32px 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c7e89' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+      }
+
+      .filter-select:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .expected-mode-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 6px;
+      }
+
+      .tests-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .test-item {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px 24px;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .test-item:hover {
+        border-color: #11aefa;
+        box-shadow: 0 4px 12px rgba(17, 174, 250, 0.15);
+      }
+
+      .test-item.expanded {
+        border-color: #11aefa;
+        box-shadow: 0 4px 12px rgba(17, 174, 250, 0.2);
+      }
+
+      .test-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        width: 100%;
+      }
+
+      .test-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+      }
+
+      .test-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .test-info {
+        flex: 1;
+      }
+
+      .test-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #111827;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .test-input {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .test-run-button {
+        background: #10b981;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 100%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+      }
+
+      .test-run-button:hover {
+        transform: scale(1.1);
+        background: #059669;
+      }
+
+      .test-details {
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, padding 0.3s;
+        width: 100%;
+      }
+
+      .test-item.expanded .test-details {
+        padding: 20px 0 0 0;
+        max-height: 2000px;
+      }
+
+      .details-section {
+        margin-bottom: 20px;
+      }
+
+      .details-section h4 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .detail-item {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #333;
+        min-height: 45px;
+      }
+
+      .detail-item pre {
+        margin: 0;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .events-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .event-item {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .event-item strong {
+        color: #333;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+
+      .error {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+      }
+
+      .empty-state h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .confirm-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+
+      .confirm-modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .confirm-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .confirm-modal-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .confirm-modal-body {
+        padding: 20px;
+      }
+
+      .confirm-modal-body p {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 20px;
+      }
+
+      .confirm-modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .confirm-button {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-family: "Manrope", sans-serif;
+      }
+
+      .confirm-button.cancel {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .confirm-button.cancel:hover {
+        background: #e5e7eb;
+      }
+
+      .confirm-button.confirm {
+        background: #10b981;
+        color: white;
+      }
+
+      .confirm-button.confirm:hover {
+        background: #059669;
+      }
+
+      .confirm-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .confirm-button.loading {
+        position: relative;
+        color: transparent;
+      }
+
+      .confirm-button.loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+
+      .confirm-button.confirm.loading::after {
+        border-color: white;
+        border-top-color: transparent;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .add-test-modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .add-test-modal-body {
+        padding: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+
+      .required-asterisk {
+        color: #ef4444;
+      }
+
+      .form-input,
+      .form-textarea,
+      .form-select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Manrope", sans-serif;
+        transition: border-color 0.2s;
+        background: white;
+      }
+
+      .form-input:focus,
+      .form-textarea:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: #11aefa;
+      }
+
+      .form-input:disabled,
+      .form-textarea:disabled,
+      .form-select:disabled {
+        background: #f3f4f6;
+        cursor: not-allowed;
+      }
+
+      .form-textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+
+      .form-textarea-code {
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 13px;
+      }
+
+      .form-hint {
+        display: block;
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+      }
+
+      .form-error-message {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 20px;
+        border: 1px solid #fecaca;
+      }
+
+      .form-input-error,
+      .form-textarea-error {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2;
+      }
+
+      .field-error {
+        display: block;
+        font-size: 12px;
+        color: #ef4444;
+        margin-top: 4px;
+        font-weight: 500;
+      }
+
+      .assert-item-error {
+        border-color: #ef4444;
+        background-color: #fef2f2;
+      }
+
+      .asserts-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .assert-item-form {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .assert-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .assert-item-number {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .assert-remove-btn {
+        background: #fee2e2;
+        color: #991b1b;
+        border: none;
+        border-radius: 4px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s;
+      }
+
+      .assert-remove-btn:hover:not(:disabled) {
+        background: #fecaca;
+      }
+
+      .assert-remove-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .assert-item-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .assert-field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .assert-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .assert-field label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 0;
+      }
+
+      .count-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .count-option-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .count-option-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        cursor: pointer;
+        min-width: 100px;
+      }
+
+      .count-option-label input[type="radio"] {
+        cursor: pointer;
+      }
+
+      .count-input {
+        max-width: 120px;
+      }
+
+      .between-inputs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .between-separator {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .add-assert-btn {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "Manrope", sans-serif;
+      }
+
+      .add-assert-btn:hover:not(:disabled) {
+        background: #e5e7eb;
+        border-color: #9ca3af;
+      }
+
+      .add-assert-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .test-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .test-action-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #6c7e89;
+        font-family: "Manrope", sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .test-action-btn:hover {
+        border-color: #d1d5db;
+        color: #374151;
+      }
+
+      .test-action-btn.delete-btn:hover {
+        border-color: #fecaca;
+        color: #991b1b;
+      }
+
+      @media (max-width: 580px) {
+        .assert-field-row {
+          grid-template-columns: 1fr;
+        }
+
+        .count-option-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .between-inputs {
+          flex-wrap: wrap;
+        }
+
+        .test-header-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .test-left {
+          width: 100%;
+        }
+
+        .test-name {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="top-header">
+        <div class="top-header-content">
+          <div class="logo-section">
+            <img
+              src="https://cms.housfy.com/assets/fe0f6198-fd34-4fd5-98c1-575fc312aa9b?width=100"
+              alt="Sofy Logo"
+            />
+            <span class="logo-text">Sofy - Testing</span>
+          </div>
+          <div class="header-actions">
+            <button class="header-button" @click.stop="addTest">
+              🧬<span> Añadir test</span>
+            </button>
+            <button class="header-button" @click.stop="viewExecutions">
+              👀<span> Ver ejecuciones</span>
+            </button>
+            <button class="header-button run-all" @click.stop="runAllTests">
+              ▶<span> Ejecutar todos los tests</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="main-content">
+          <h1 class="page-title">Tests</h1>
+          <p class="tests-count">
+            {{ filteredTests ? filteredTests.length : 0 }} tests configurados
+            <i style="font-size: 12px">
+              (Click en la tarjeta para ver los detalles)
+            </i>
+          </p>
+
+          <div v-if="tests && tests.length > 0" class="filters-section">
+            <div class="filters-row">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Buscar por nombre o input..."
+                v-model="searchText"
+              />
+              <select class="filter-select" v-model="selectedMode">
+                <option value="">Todos los modos</option>
+                <option
+                  v-for="mode in availableModes"
+                  :key="mode"
+                  :value="mode"
+                >
+                  {{ mode }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div v-if="error" class="error">{{ error }}</div>
+
+          <div v-if="loading" class="loading">Cargando tests...</div>
+
+          <div
+            v-if="!loading && !error && tests && tests.length === 0"
+            class="empty-state"
+          >
+            <h3>No hay tests configurados</h3>
+            <p>No se encontraron tests configurados.</p>
+          </div>
+
+          <div
+            v-if="!loading && !error && tests && tests.length > 0 && filteredTests && filteredTests.length === 0"
+            class="empty-state"
+          >
+            <h3>No se encontraron tests</h3>
+            <p>No hay tests que coincidan con los filtros aplicados.</p>
+          </div>
+
+          <div
+            v-if="filteredTests && filteredTests.length > 0"
+            class="tests-list"
+          >
+            <div
+              v-for="(test, index) in filteredTests"
+              :key="test.testName || index"
+              class="test-item"
+              :class="{ expanded: expandedTestName === test.testName }"
+              @click="toggleTest(test.testName)"
+            >
+              <div class="test-header-row">
+                <div class="test-left">
+                  <div class="test-icon">🧬</div>
+                  <div class="test-info">
+                    <div class="test-name">
+                      {{ test.testName }}
+                      <div
+                        class="expected-mode-tag"
+                        :style="getModeTagStyle(test.expectedMode)"
+                      >
+                        {{ test.expectedMode }}
+                      </div>
+                    </div>
+                    <div class="test-input">{{ test.input }}</div>
+                  </div>
+                </div>
+                <div class="test-run-button" @click.stop="runTest(test)">▶</div>
+              </div>
+
+              <div
+                class="test-details"
+                v-if="expandedTestName === test.testName"
+              >
+                <div class="details-section">
+                  <h4>Input</h4>
+                  <div class="detail-item">{{ test.input }}</div>
+                </div>
+
+                <div class="details-section">
+                  <h4>Memory</h4>
+                  <div class="detail-item">{{ test.memory }}</div>
+                </div>
+
+                <div class="details-section">
+                  <h4>Modo Esperado</h4>
+                  <div class="detail-item">{{ test.expectedMode }}</div>
+                </div>
+
+                <div
+                  class="details-section"
+                  v-if="test.expectedEvents && test.expectedEvents.length > 0"
+                >
+                  <h4>Eventos Esperados</h4>
+                  <div class="events-list">
+                    <div
+                      v-for="(event, eventIndex) in test.expectedEvents"
+                      :key="eventIndex"
+                      class="event-item"
+                    >
+                      <strong>Evento {{ event.type }}:</strong>
+                      <span v-if="event.count.expectedExactly !== undefined">
+                        Exactamente {{ event.count.expectedExactly }}
+                      </span>
+                      <span v-if="event.count.expectedBetween">
+                        Entre {{ event.count.expectedBetween[0] }} y {{
+                        event.count.expectedBetween[1] }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="details-section" v-if="test.expectedResponse">
+                  <h4>Respuesta Esperada</h4>
+                  <div class="detail-item">{{ test.expectedResponse }}</div>
+                </div>
+
+                <div class="details-section" v-if="test.profile">
+                  <h4>Perfil Extra</h4>
+                  <div class="detail-item">
+                    <pre>{{ JSON.stringify(test.profile, null, 2) }}</pre>
+                  </div>
+                </div>
+
+                <div class="details-section">
+                  <div class="test-actions">
+                    <button
+                      class="test-action-btn edit-btn"
+                      @click.stop="editTest(test)"
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
+                      class="test-action-btn delete-btn"
+                      @click.stop="deleteTest(test)"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Confirmación -->
+      <div
+        v-if="confirmModal.show"
+        class="confirm-modal-overlay"
+        @click="cancelConfirm"
+      >
+        <div class="confirm-modal-content" @click.stop>
+          <div class="confirm-modal-header">
+            <h3>{{ confirmModal.title }}</h3>
+          </div>
+          <div class="confirm-modal-body">
+            <p>{{ confirmModal.message }}</p>
+            <div class="confirm-modal-actions">
+              <button
+                class="confirm-button cancel"
+                @click="cancelConfirm"
+                :disabled="confirmModal.loading"
+              >
+                Cancelar
+              </button>
+              <button
+                class="confirm-button confirm"
+                :class="{ loading: confirmModal.loading }"
+                @click="executeConfirmed"
+                :disabled="confirmModal.loading"
+              >
+                {{ confirmModal.loading ? confirmModal.action === "delete" ?
+                "Eliminando..." : "Ejecutando..." : confirmModal.action ===
+                "delete" ? "Eliminar" : "Ejecutar" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Añadir Test -->
+      <div
+        v-if="addTestModal.show"
+        class="confirm-modal-overlay"
+        @click="cancelAddTest"
+      >
+        <div class="add-test-modal-content" @click.stop>
+          <div class="confirm-modal-header">
+            <h3>🧬 Añadir Nuevo Test</h3>
+          </div>
+          <div class="add-test-modal-body">
+            <div class="form-group">
+              <label for="testName"
+                >Nombre del Test <span class="required-asterisk">*</span></label
+              >
+              <input
+                id="testName"
+                type="text"
+                v-model="addTestModal.form.testName"
+                placeholder="Ej: Saludo"
+                class="form-input"
+                :class="{ 'form-input-error': addTestModal.fieldErrors.testName }"
+                :disabled="addTestModal.loading"
+                @blur="validateField('testName')"
+              />
+              <span
+                v-if="addTestModal.fieldErrors.testName"
+                class="field-error"
+              >
+                {{ addTestModal.fieldErrors.testName }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="mode"
+                >Modo <span class="required-asterisk">*</span></label
+              >
+              <select
+                id="mode"
+                v-model="addTestModal.form.mode"
+                class="form-select"
+                :class="{ 'form-input-error': addTestModal.fieldErrors.mode }"
+                :disabled="addTestModal.loading || loadingModes"
+                @blur="validateField('mode')"
+              >
+                <option value="">Selecciona un modo</option>
+                <option
+                  v-for="mode in modes"
+                  :key="mode.code"
+                  :value="mode.code"
+                >
+                  {{ mode.label }}
+                </option>
+              </select>
+              <span v-if="addTestModal.fieldErrors.mode" class="field-error">
+                {{ addTestModal.fieldErrors.mode }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="input"
+                >Input <span class="required-asterisk">*</span></label
+              >
+              <textarea
+                id="input"
+                v-model="addTestModal.form.input"
+                placeholder="Ej: Hola!!"
+                class="form-textarea"
+                :class="{ 'form-input-error': addTestModal.fieldErrors.input }"
+                rows="3"
+                :disabled="addTestModal.loading"
+                @blur="validateField('input')"
+              ></textarea>
+              <span v-if="addTestModal.fieldErrors.input" class="field-error">
+                {{ addTestModal.fieldErrors.input }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="memory">Memory</label>
+              <textarea
+                id="memory"
+                v-model="addTestModal.form.memory"
+                placeholder="Memory del test (opcional)"
+                class="form-textarea"
+                rows="2"
+                :disabled="addTestModal.loading"
+              ></textarea>
+              <small class="form-hint"
+                >Formato: Human: Hola\nAI: Hola Xabier! 😊</small
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="profile"
+                >Profile (JSON) <span class="required-asterisk">*</span></label
+              >
+              <textarea
+                id="profile"
+                v-model="addTestModal.form.profile"
+                placeholder='{"roles": [309]}'
+                class="form-textarea form-textarea-code"
+                :class="{ 'form-input-error': addTestModal.fieldErrors.profile }"
+                rows="4"
+                :disabled="addTestModal.loading"
+                @blur="validateField('profile')"
+              ></textarea>
+              <small class="form-hint"
+                >Formato JSON. Ejemplo: {"roles": [309]}</small
+              >
+              <span v-if="addTestModal.fieldErrors.profile" class="field-error">
+                {{ addTestModal.fieldErrors.profile }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="expectedMode"
+                >Expected Mode <span class="required-asterisk">*</span></label
+              >
+              <select
+                id="expectedMode"
+                v-model="addTestModal.form.expectedMode"
+                class="form-select"
+                :class="{ 'form-input-error': addTestModal.fieldErrors.expectedMode }"
+                :disabled="addTestModal.loading || loadingModes"
+                @blur="validateField('expectedMode')"
+              >
+                <option value="">Selecciona un modo esperado</option>
+                <option value="Fallback">Fallback</option>
+                <option
+                  v-for="mode in filteredModesForExpected"
+                  :key="mode.code"
+                  :value="mode.label"
+                >
+                  {{ mode.label }}
+                </option>
+              </select>
+              <span
+                v-if="addTestModal.fieldErrors.expectedMode"
+                class="field-error"
+              >
+                {{ addTestModal.fieldErrors.expectedMode }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label
+                >Expected Events <span class="required-asterisk">*</span></label
+              >
+              <div
+                v-if="addTestModal.fieldErrors.expectedEvents"
+                class="field-error"
+                style="margin-bottom: 12px"
+              >
+                {{ addTestModal.fieldErrors.expectedEvents }}
+              </div>
+              <div class="asserts-container">
+                <div
+                  v-for="(assert, index) in addTestModal.form.expectedEvents"
+                  :key="index"
+                  class="assert-item-form"
+                  :class="{ 'assert-item-error': hasAssertError(index) }"
+                >
+                  <div class="assert-item-header">
+                    <span class="assert-item-number"
+                      >Assert {{ index + 1 }}</span
+                    >
+                    <button
+                      type="button"
+                      class="assert-remove-btn"
+                      @click="removeAssert(index)"
+                      :disabled="addTestModal.loading"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div class="assert-item-body">
+                    <div class="assert-field-row">
+                      <div class="assert-field">
+                        <label
+                          >Type <span class="required-asterisk">*</span></label
+                        >
+                        <input
+                          type="text"
+                          v-model="assert.type"
+                          placeholder="Ej: ia_message"
+                          class="form-input"
+                          :class="{ 'form-input-error': hasAssertFieldError(index, 'type') }"
+                          :disabled="addTestModal.loading"
+                          @blur="validateAssertField(index, 'type')"
+                        />
+                        <span
+                          v-if="hasAssertFieldError(index, 'type')"
+                          class="field-error"
+                          style="font-size: 12px; margin-top: 4px"
+                        >
+                          {{ getAssertFieldError(index, 'type') }}
+                        </span>
+                      </div>
+                      <div class="assert-field">
+                        <label>Assert Type</label>
+                        <select
+                          v-model="assert.assertType"
+                          class="form-select"
+                          :disabled="addTestModal.loading"
+                        >
+                          <option value="count">Count</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div
+                      v-if="assert.assertType === 'count'"
+                      class="count-options"
+                    >
+                      <div class="count-option-row">
+                        <label class="count-option-label">
+                          <input
+                            type="radio"
+                            :value="'exactly'"
+                            v-model="assert.countType"
+                            :disabled="addTestModal.loading"
+                          />
+                          Exactly
+                        </label>
+                        <input
+                          v-if="assert.countType === 'exactly'"
+                          type="number"
+                          v-model.number="assert.exactly"
+                          placeholder="Número"
+                          class="form-input count-input"
+                          :disabled="addTestModal.loading"
+                          min="0"
+                        />
+                      </div>
+                      <div class="count-option-row">
+                        <label class="count-option-label">
+                          <input
+                            type="radio"
+                            :value="'between'"
+                            v-model="assert.countType"
+                            :disabled="addTestModal.loading"
+                          />
+                          Between
+                        </label>
+                        <div
+                          v-if="assert.countType === 'between'"
+                          class="between-inputs"
+                        >
+                          <input
+                            type="number"
+                            v-model.number="assert.betweenMin"
+                            placeholder="Min"
+                            class="form-input count-input"
+                            :disabled="addTestModal.loading"
+                            min="0"
+                          />
+                          <span class="between-separator">y</span>
+                          <input
+                            type="number"
+                            v-model.number="assert.betweenMax"
+                            placeholder="Max"
+                            class="form-input count-input"
+                            :disabled="addTestModal.loading"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="add-assert-btn"
+                  @click="addAssert"
+                  :disabled="addTestModal.loading"
+                >
+                  + Añadir Assert
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="expectedResponse"
+                >Expected Response
+                <span class="required-asterisk">*</span></label
+              >
+              <textarea
+                id="expectedResponse"
+                v-model="addTestModal.form.expectedResponse"
+                placeholder="Ej: Un simple saludo con algo de proactividad"
+                class="form-textarea"
+                :class="{ 'form-input-error': addTestModal.fieldErrors.expectedResponse }"
+                rows="3"
+                :disabled="addTestModal.loading"
+                @blur="validateField('expectedResponse')"
+              ></textarea>
+              <span
+                v-if="addTestModal.fieldErrors.expectedResponse"
+                class="field-error"
+              >
+                {{ addTestModal.fieldErrors.expectedResponse }}
+              </span>
+            </div>
+
+            <div v-if="addTestModal.error" class="form-error-message">
+              {{ addTestModal.error }}
+            </div>
+
+            <div class="confirm-modal-actions">
+              <button
+                class="confirm-button cancel"
+                @click="cancelAddTest"
+                :disabled="addTestModal.loading"
+              >
+                Cancelar
+              </button>
+              <button
+                class="confirm-button confirm"
+                :class="{ loading: addTestModal.loading }"
+                @click="submitAddTest"
+                :disabled="addTestModal.loading"
+              >
+                {{ addTestModal.loading ? "Creando..." : "Crear Test" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            tests: null,
+            loading: false,
+            error: null,
+            expandedTestName: null,
+            searchText: "",
+            selectedMode: "",
+            modes: [],
+            loadingModes: false,
+            confirmModal: {
+              show: false,
+              title: "",
+              message: "",
+              testName: null,
+              action: null, // 'execute' o 'delete'
+              loading: false,
+            },
+            addTestModal: {
+              show: false,
+              loading: false,
+              error: null,
+              fieldErrors: {},
+              form: {
+                testName: "",
+                mode: "auto",
+                input: "",
+                memory: "",
+                profile: '{\n  "roles": []\n}',
+                expectedMode: "",
+                expectedEvents: [],
+                expectedResponse: "",
+              },
+            },
+          };
+        },
+        computed: {
+          filteredModesForExpected() {
+            // Filtrar "auto" de los modos para Expected Mode
+            return this.modes.filter((mode) => mode.code !== "auto");
+          },
+          availableModes() {
+            if (!this.tests) return [];
+            const modes = new Set();
+            this.tests.forEach((test) => {
+              if (test.expectedMode) {
+                modes.add(test.expectedMode);
+              }
+            });
+            return Array.from(modes).sort();
+          },
+          filteredTests() {
+            if (!this.tests) return [];
+            let filtered = this.tests;
+
+            // Filtrar por texto (testName e input)
+            if (this.searchText) {
+              const searchLower = this.searchText.toLowerCase();
+              filtered = filtered.filter(
+                (test) =>
+                  (test.testName &&
+                    test.testName.toLowerCase().includes(searchLower)) ||
+                  (test.input && test.input.toLowerCase().includes(searchLower))
+              );
+            }
+
+            // Filtrar por Expected Mode
+            if (this.selectedMode) {
+              filtered = filtered.filter(
+                (test) => test.expectedMode === this.selectedMode
+              );
+            }
+
+            return filtered;
+          },
+        },
+        mounted() {
+          this.loadTests();
+          this.loadModes();
+        },
+        methods: {
+          async loadModes() {
+            this.loadingModes = true;
+            try {
+              const response = await fetch(
+                `https://n8n.housfy.com/webhook/sofy/get-admin-all-modes`
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  `Error al cargar los modos: ${response.statusText}`
+                );
+              }
+
+              const data = await response.json();
+              this.modes = data.modes || [];
+            } catch (err) {
+              console.error("Error al cargar los modos:", err);
+              this.modes = [];
+            } finally {
+              this.loadingModes = false;
+            }
+          },
+          async loadTests() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+              const response = await fetch(
+                `https://n8n.housfy.com/webhook/sofy/tests`
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  `Error al cargar los tests: ${response.statusText}`
+                );
+              }
+
+              const data = await response.json();
+              this.tests = data.tests || [];
+            } catch (err) {
+              this.error = `Error al cargar los tests: ${err.message}`;
+              this.tests = null;
+            } finally {
+              this.loading = false;
+            }
+          },
+          toggleTest(testName) {
+            this.expandedTestName =
+              this.expandedTestName === testName ? null : testName;
+          },
+          editTest(test) {
+            console.log("Editar test:", test);
+          },
+          deleteTest(test) {
+            this.confirmModal = {
+              show: true,
+              title: "Eliminar test",
+              message: `¿Estás seguro de que quieres eliminar el test "${test.testName}"?`,
+              testName: test.testName,
+              action: "delete",
+              loading: false,
+            };
+          },
+          viewExecutions() {
+            console.log("Ver ejecuciones");
+            window.location.href = "test-executions.html";
+          },
+          addTest() {
+            this.addTestModal.show = true;
+            // Resetear el formulario
+            this.addTestModal.form = {
+              testName: "",
+              mode: "auto",
+              input: "",
+              memory: "",
+              profile: '{\n  "roles": []\n}',
+              expectedMode: "",
+              expectedEvents: [],
+              expectedResponse: "",
+            };
+            this.addTestModal.error = null;
+            this.addTestModal.fieldErrors = {};
+          },
+          addAssert() {
+            this.addTestModal.form.expectedEvents.push({
+              type: "",
+              assertType: "count",
+              countType: "exactly",
+              exactly: null,
+              betweenMin: null,
+              betweenMax: null,
+            });
+          },
+          removeAssert(index) {
+            this.addTestModal.form.expectedEvents.splice(index, 1);
+          },
+          buildExpectedEventsJSON() {
+            if (
+              !this.addTestModal.form.expectedEvents ||
+              this.addTestModal.form.expectedEvents.length === 0
+            ) {
+              return "";
+            }
+
+            const events = this.addTestModal.form.expectedEvents
+              .map((assert) => {
+                if (!assert.type || !assert.assertType) {
+                  return null;
+                }
+
+                const event = {
+                  type: assert.type,
+                };
+
+                if (assert.assertType === "count") {
+                  if (
+                    assert.countType === "exactly" &&
+                    assert.exactly !== null
+                  ) {
+                    event.count = {
+                      expectedExactly: assert.exactly,
+                    };
+                  } else if (
+                    assert.countType === "between" &&
+                    assert.betweenMin !== null &&
+                    assert.betweenMax !== null
+                  ) {
+                    event.count = {
+                      expectedBetween: [assert.betweenMin, assert.betweenMax],
+                    };
+                  }
+                }
+
+                return event;
+              })
+              .filter((event) => event !== null);
+
+            return JSON.stringify(events, null, 2);
+          },
+          runAllTests() {
+            this.confirmModal = {
+              show: true,
+              title: "Ejecutar todos los tests",
+              message: "¿Estás seguro de que quieres ejecutar todos los tests?",
+              testName: null,
+              action: "execute",
+              loading: false,
+            };
+          },
+          runTest(test) {
+            this.confirmModal = {
+              show: true,
+              title: "Ejecutar test",
+              message: `¿Estás seguro de que quieres ejecutar el test "${test.testName}"?`,
+              testName: test.testName,
+              action: "execute",
+              loading: false,
+            };
+          },
+          cancelConfirm() {
+            if (this.confirmModal.loading) return;
+            this.confirmModal = {
+              show: false,
+              title: "",
+              message: "",
+              testName: null,
+              action: null,
+              loading: false,
+            };
+          },
+          async executeConfirmed() {
+            this.confirmModal.loading = true;
+            this.error = null;
+
+            try {
+              if (this.confirmModal.action === "delete") {
+                // Eliminar test
+                if (!this.confirmModal.testName) {
+                  throw new Error("No se especificó el nombre del test");
+                }
+
+                const response = await fetch(
+                  `https://n8n.housfy.com/webhook/sofy/delete-test`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      testName: this.confirmModal.testName,
+                    }),
+                  }
+                );
+
+                if (!response.ok) {
+                  throw new Error(
+                    `Error al eliminar el test: ${response.statusText}`
+                  );
+                }
+
+                // Cerrar el modal y recargar los tests
+                this.confirmModal = {
+                  show: false,
+                  title: "",
+                  message: "",
+                  testName: null,
+                  action: null,
+                  loading: false,
+                };
+                await this.loadTests();
+              } else {
+                // Ejecutar tests
+                const body = this.confirmModal.testName
+                  ? JSON.stringify({ testName: this.confirmModal.testName })
+                  : null;
+
+                const response = await fetch(
+                  `https://n8n.housfy.com/webhook/sofy/execute-tests`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: body,
+                  }
+                );
+
+                if (!response.ok) {
+                  throw new Error(
+                    `Error al ejecutar los tests: ${response.statusText}`
+                  );
+                }
+
+                const data = await response.json();
+                if (data.execution) {
+                  window.location.href = `test-execution.html?execution=${data.execution}`;
+                } else {
+                  throw new Error("No se recibió el execution ID");
+                }
+              }
+            } catch (err) {
+              this.error =
+                this.confirmModal.action === "delete"
+                  ? `Error al eliminar el test: ${err.message}`
+                  : `Error al ejecutar los tests: ${err.message}`;
+              this.confirmModal.loading = false;
+            }
+          },
+          cancelAddTest() {
+            if (this.addTestModal.loading) return;
+            this.addTestModal.show = false;
+            this.addTestModal.loading = false;
+            this.addTestModal.error = null;
+            this.addTestModal.fieldErrors = {};
+          },
+          validateField(fieldName) {
+            const value = this.addTestModal.form[fieldName];
+            delete this.addTestModal.fieldErrors[fieldName];
+
+            if (fieldName === "memory") {
+              // Memory es opcional, no validar
+              return true;
+            }
+
+            if (fieldName === "profile") {
+              if (!value || value.trim() === "") {
+                this.addTestModal.fieldErrors[fieldName] =
+                  "El profile es obligatorio";
+                return false;
+              }
+              // Validar que sea JSON válido
+              try {
+                JSON.parse(value);
+              } catch (e) {
+                this.addTestModal.fieldErrors[fieldName] =
+                  "El profile debe ser un JSON válido";
+                return false;
+              }
+              return true;
+            }
+
+            if (!value || (typeof value === "string" && value.trim() === "")) {
+              this.addTestModal.fieldErrors[fieldName] =
+                "Este campo es obligatorio";
+              return false;
+            }
+
+            return true;
+          },
+          validateExpectedEvents() {
+            delete this.addTestModal.fieldErrors.expectedEvents;
+
+            if (
+              !this.addTestModal.form.expectedEvents ||
+              this.addTestModal.form.expectedEvents.length === 0
+            ) {
+              this.addTestModal.fieldErrors.expectedEvents =
+                "Debe añadir al menos un assert";
+              return false;
+            }
+
+            let hasErrors = false;
+            this.addTestModal.form.expectedEvents.forEach((assert, index) => {
+              if (!assert.type || assert.type.trim() === "") {
+                hasErrors = true;
+              }
+
+              if (assert.assertType === "count") {
+                if (assert.countType === "exactly") {
+                  if (assert.exactly === null || assert.exactly === undefined) {
+                    hasErrors = true;
+                  }
+                } else if (assert.countType === "between") {
+                  if (
+                    assert.betweenMin === null ||
+                    assert.betweenMin === undefined ||
+                    assert.betweenMax === null ||
+                    assert.betweenMax === undefined
+                  ) {
+                    hasErrors = true;
+                  }
+                }
+              }
+            });
+
+            if (hasErrors) {
+              this.addTestModal.fieldErrors.expectedEvents =
+                "Todos los asserts deben estar completos";
+              return false;
+            }
+
+            return true;
+          },
+          validateAllFields() {
+            const fields = [
+              "testName",
+              "mode",
+              "input",
+              "profile",
+              "expectedMode",
+              "expectedResponse",
+            ];
+
+            let isValid = true;
+            fields.forEach((field) => {
+              if (!this.validateField(field)) {
+                isValid = false;
+              }
+            });
+
+            if (!this.validateExpectedEvents()) {
+              isValid = false;
+            }
+
+            return isValid;
+          },
+          hasAssertError(index) {
+            return (
+              this.addTestModal.fieldErrors.expectedEvents &&
+              this.addTestModal.form.expectedEvents[index]
+            );
+          },
+          hasAssertFieldError(index, field) {
+            const assert = this.addTestModal.form.expectedEvents[index];
+            if (!assert) return false;
+
+            if (field === "type" && !assert.type) {
+              return true;
+            }
+
+            if (field === "count" && assert.assertType === "count") {
+              if (assert.countType === "exactly") {
+                return assert.exactly === null || assert.exactly === undefined;
+              } else if (assert.countType === "between") {
+                return (
+                  assert.betweenMin === null ||
+                  assert.betweenMin === undefined ||
+                  assert.betweenMax === null ||
+                  assert.betweenMax === undefined
+                );
+              }
+            }
+
+            return false;
+          },
+          getAssertFieldError(index, field) {
+            if (field === "type") {
+              return "El type es obligatorio";
+            }
+            if (field === "count") {
+              return "Debe completar las opciones de count";
+            }
+            return "";
+          },
+          validateAssertField(index, field) {
+            // Validación individual de campos de assert
+            if (field === "type") {
+              const assert = this.addTestModal.form.expectedEvents[index];
+              if (!assert || !assert.type || assert.type.trim() === "") {
+                // El error se mostrará en validateExpectedEvents
+                this.validateExpectedEvents();
+              }
+            }
+          },
+          async submitAddTest() {
+            // Limpiar errores previos
+            this.addTestModal.error = null;
+            this.addTestModal.fieldErrors = {};
+
+            // Validar todos los campos
+            if (!this.validateAllFields()) {
+              // Los errores ya están en fieldErrors
+              return;
+            }
+
+            this.addTestModal.loading = true;
+
+            try {
+              // Preparar el body del request
+              const body = {
+                testName: this.addTestModal.form.testName,
+                mode: this.addTestModal.form.mode,
+                input: this.addTestModal.form.input,
+                memory: this.addTestModal.form.memory || "",
+                profile: this.addTestModal.form.profile,
+                expectedMode: this.addTestModal.form.expectedMode,
+                expectedEvents: this.buildExpectedEventsJSON(),
+                expectedResponse: this.addTestModal.form.expectedResponse,
+              };
+
+              const response = await fetch(
+                `https://n8n.housfy.com/webhook/sofy/new-test`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(body),
+                }
+              );
+
+              if (!response.ok) {
+                let errorMessage = `Error al crear el test`;
+                try {
+                  const errorData = await response.json();
+                  if (errorData.errorMessage) {
+                    errorMessage = errorData.errorMessage;
+                  }
+                } catch (e) {
+                  // Si no se puede parsear el JSON, usar el mensaje por defecto
+                }
+                throw new Error(errorMessage);
+              }
+
+              // Cerrar el modal y recargar los tests
+              this.addTestModal.show = false;
+              this.addTestModal.loading = false;
+              this.addTestModal.error = null;
+              this.addTestModal.fieldErrors = {};
+              await this.loadTests();
+            } catch (err) {
+              this.addTestModal.error = err.message;
+              this.addTestModal.loading = false;
+            }
+          },
+          getModeTagStyle(mode) {
+            if (!mode) {
+              return {
+                background: "#f3f4f6",
+                color: "#6b7280",
+              };
+            }
+
+            // Función para generar un hash del string
+            const hashString = (str) => {
+              let hash = 0;
+              for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash = hash & hash; // Convert to 32bit integer
+              }
+              return Math.abs(hash);
+            };
+
+            // Generar colores basados en el hash del modo
+            const hash = hashString(mode);
+
+            // Paleta de colores pastel para backgrounds
+            const backgrounds = [
+              "#e0f2fe", // azul claro
+              "#d1fae5", // verde claro
+              "#fef3c7", // amarillo claro
+              "#fce7f3", // rosa claro
+              "#e9d5ff", // morado claro
+              "#fecaca", // rojo claro
+              "#cffafe", // cyan claro
+              "#ddd6fe", // índigo claro
+              "#fed7aa", // naranja claro
+              "#f0f9ff", // azul muy claro
+              "#ecfdf5", // verde muy claro
+              "#fffbeb", // amarillo muy claro
+            ];
+
+            // Paleta de colores oscuros para texto
+            const textColors = [
+              "#0369a1", // azul oscuro
+              "#065f46", // verde oscuro
+              "#92400e", // amarillo oscuro
+              "#9f1239", // rosa oscuro
+              "#6b21a8", // morado oscuro
+              "#991b1b", // rojo oscuro
+              "#0e7490", // cyan oscuro
+              "#5b21b6", // índigo oscuro
+              "#9a3412", // naranja oscuro
+              "#075985", // azul muy oscuro
+              "#047857", // verde muy oscuro
+              "#78350f", // amarillo muy oscuro
+            ];
+
+            const bgIndex = hash % backgrounds.length;
+            const textIndex = hash % textColors.length;
+
+            return {
+              background: backgrounds[bgIndex],
+              color: textColors[textIndex],
+            };
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
