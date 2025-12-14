@@ -865,7 +865,9 @@
               <p class="status-badge">
                 Falta {{numberOfTests - tests.length}} tests - Ejecutando...
               </p>
-              <button class="status-badge-button" @click="loadTests">🔄</button>
+              <button class="status-badge-button" @click="loadTests">
+                🔄 <i style="font-size: 12px">(Actualizando cada 3s)</i>
+              </button>
             </div>
 
             <div v-if="error" class="error">{{ error }}</div>
@@ -1101,6 +1103,23 @@
             </div>
             <div class="modal-body">
               <div class="conversation">
+                <!-- Mensajes de Memory -->
+                <template
+                  v-if="parsedMemoryMessages && parsedMemoryMessages.length > 0"
+                >
+                  <div
+                    v-for="(msg, msgIndex) in parsedMemoryMessages"
+                    :key="'memory-' + msgIndex"
+                    :class="['message', msg.type === 'human' ? 'user' : 'assistant']"
+                  >
+                    <div class="message-header">{{ msg.header }}</div>
+                    <div class="message-content">{{ msg.content }}</div>
+                  </div>
+                </template>
+
+                <hr />
+
+                <!-- Mensaje del usuario actual -->
                 <div class="message user">
                   <div class="message-header">Usuario</div>
                   <div class="message-content">{{ selectedTest.input }}</div>
@@ -1144,6 +1163,45 @@
           };
         },
         computed: {
+          parsedMemoryMessages() {
+            if (!this.selectedTest || !this.selectedTest.memory) {
+              return [];
+            }
+
+            const memory = this.selectedTest.memory;
+            const messages = [];
+
+            // Dividir por líneas
+            const lines = memory.split("\n");
+
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line) continue;
+
+              // Buscar líneas que empiezan con "Human:" o "AI:"
+              if (line.startsWith("Human:")) {
+                const content = line.substring(6).trim(); // Remover "Human:"
+                if (content) {
+                  messages.push({
+                    type: "human",
+                    content,
+                    header: "Usuario (Memory)",
+                  });
+                }
+              } else if (line.startsWith("AI:")) {
+                const content = line.substring(3).trim(); // Remover "AI:"
+                if (content) {
+                  messages.push({
+                    type: "ai",
+                    content,
+                    header: "AI (Memory)",
+                  });
+                }
+              }
+            }
+
+            return messages;
+          },
           summary() {
             if (!this.filteredTests)
               return { success: 0, partial: 0, failed: 0 };
@@ -1316,6 +1374,11 @@
               this.tests = data.tests || [];
               this.status = data.status || "Done";
               this.numberOfTests = data.numberOfTests || 0;
+              if (this.status === "Pending") {
+                setTimeout(() => {
+                  this.loadTests();
+                }, 3000);
+              }
             } catch (err) {
               this.error = `Error al cargar los tests ${err.message}`;
               this.tests = null;
