@@ -1159,7 +1159,23 @@
         >
           <div class="add-test-modal-content" @click.stop>
             <div class="confirm-modal-header">
-              <h3>{{ addTestModalTitle }}</h3>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <h3>{{ addTestModalTitle }}</h3>
+                <button
+                  v-if="!addTestModal.isEditing"
+                  class="header-button"
+                  @click.stop="openJsonImportModal"
+                  style="margin-left: 12px; padding: 6px 12px; font-size: 13px"
+                >
+                  📋 Desde JSON
+                </button>
+              </div>
             </div>
             <div class="add-test-modal-body">
               <div class="form-group">
@@ -1495,6 +1511,50 @@
             </div>
           </div>
         </div>
+
+        <!-- Modal de Importar desde JSON -->
+        <div
+          v-if="jsonImportModal.show"
+          class="confirm-modal-overlay"
+          @click="closeJsonImportModal"
+          style="z-index: 1500"
+        >
+          <div
+            class="add-test-modal-content"
+            @click.stop
+            style="max-width: 700px"
+          >
+            <div class="confirm-modal-header">
+              <h3>📋 Importar desde JSON</h3>
+            </div>
+            <div class="add-test-modal-body">
+              <div class="form-group">
+                <label for="jsonText">Pega tu JSON aquí:</label>
+                <textarea
+                  id="jsonText"
+                  v-model="jsonImportModal.jsonText"
+                  class="form-textarea form-textarea-code"
+                  rows="20"
+                  placeholder="Pega tu JSON aquí..."
+                ></textarea>
+                <small class="form-hint">
+                  Usa la plantilla JSON por defecto o pega tu propio JSON
+                </small>
+              </div>
+              <div class="confirm-modal-actions">
+                <button
+                  class="confirm-button cancel"
+                  @click="closeJsonImportModal"
+                >
+                  Cancelar
+                </button>
+                <button class="confirm-button confirm" @click="applyJsonImport">
+                  Aplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1539,6 +1599,10 @@
                 expectedEvents: [],
                 expectedResponse: "",
               },
+            },
+            jsonImportModal: {
+              show: false,
+              jsonText: "",
             },
           };
         },
@@ -1707,6 +1771,98 @@
             };
             this.addTestModal.error = null;
             this.addTestModal.fieldErrors = {};
+          },
+          openJsonImportModal() {
+            // Plantilla JSON por defecto
+            const defaultTemplate = {
+              testName: "Nombre del test",
+              inputMode: "auto",
+              input: "¿Cómo estás?",
+              memory: "Human:Hola\nAI:¡Hola! Encantada de saludarte",
+              profile: {
+                roles: [309],
+              },
+              expectedMode: "Fallback",
+              expectedEvents: [
+                {
+                  type: "ia_message",
+                  count: {
+                    expectedExactly: 1,
+                  },
+                },
+                {
+                  type: "ia_finished",
+                  count: {
+                    expectedExactly: 1,
+                  },
+                },
+              ],
+              expectedResponse:
+                "Objetivo que se espera de la respuesta del asistente",
+            };
+            this.jsonImportModal.jsonText = JSON.stringify(
+              defaultTemplate,
+              null,
+              2
+            );
+            this.jsonImportModal.show = true;
+          },
+          closeJsonImportModal() {
+            this.jsonImportModal.show = false;
+            this.jsonImportModal.jsonText = "";
+          },
+          applyJsonImport() {
+            try {
+              // Parsear el JSON
+              const jsonData = JSON.parse(this.jsonImportModal.jsonText);
+
+              // Validar que tenga los campos mínimos
+              if (!jsonData.testName) {
+                throw new Error("El JSON debe contener 'testName'");
+              }
+              if (!jsonData.input) {
+                throw new Error("El JSON debe contener 'input'");
+              }
+
+              // Parsear profile si es objeto a JSON string
+              let profileStr = '{\n  "roles": []\n}';
+              if (jsonData.profile) {
+                if (typeof jsonData.profile === "object") {
+                  profileStr = JSON.stringify(jsonData.profile, null, 2);
+                } else if (typeof jsonData.profile === "string") {
+                  // Intentar parsear si es string
+                  try {
+                    JSON.parse(jsonData.profile);
+                    profileStr = jsonData.profile;
+                  } catch (e) {
+                    profileStr = '{\n  "roles": []\n}';
+                  }
+                }
+              }
+
+              // Rellenar el formulario con los datos del JSON
+              this.addTestModal.form = {
+                testName: jsonData.testName || "",
+                mode: jsonData.inputMode || jsonData.mode || "auto",
+                input: jsonData.input || "",
+                memory: jsonData.memory || "",
+                profile: profileStr,
+                expectedMode: jsonData.expectedMode || "",
+                expectedEvents: this.parseExpectedEvents(
+                  jsonData.expectedEvents
+                ),
+                expectedResponse: jsonData.expectedResponse || "",
+              };
+
+              // Limpiar errores
+              this.addTestModal.error = null;
+              this.addTestModal.fieldErrors = {};
+
+              // Cerrar el modal de JSON
+              this.closeJsonImportModal();
+            } catch (err) {
+              alert(`Error al parsear el JSON: ${err.message}`);
+            }
           },
           parseExpectedEvents(expectedEvents) {
             if (!expectedEvents) return [];
