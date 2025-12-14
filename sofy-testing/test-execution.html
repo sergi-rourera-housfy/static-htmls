@@ -866,7 +866,7 @@
                 Falta {{numberOfTests - tests.length}} tests - Ejecutando...
               </p>
               <button class="status-badge-button" @click="loadTests">
-                🔄 <i style="font-size: 12px">(Actualizando cada 3s)</i>
+                🔄 <i style="font-size: 12px">(Actualizando cada 4s)</i>
               </button>
             </div>
 
@@ -1377,7 +1377,7 @@
               if (this.status === "Pending") {
                 setTimeout(() => {
                   this.loadTests();
-                }, 3000);
+                }, 4000);
               }
             } catch (err) {
               this.error = `Error al cargar los tests ${err.message}`;

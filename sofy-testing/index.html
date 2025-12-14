@@ -942,7 +942,7 @@
                 👀<span> Ver ejecuciones</span>
               </button>
               <button class="header-button run-all" @click.stop="runAllTests">
-                ▶<span> Ejecutar todos los tests</span>
+                ▶<span> {{ runAllButtonText }}</span>
               </button>
               <button
                 class="header-button"
@@ -1628,6 +1628,12 @@
             }
             return modeLabels.sort();
           },
+          runAllButtonText() {
+            if (this.selectedMode) {
+              return `Ejecutar tests de ${this.selectedMode}`;
+            }
+            return "Ejecutar todos los tests";
+          },
           filteredTests() {
             if (!this.tests) return [];
             let filtered = this.tests;
@@ -1982,10 +1988,17 @@
             return JSON.stringify(events, null, 2);
           },
           runAllTests() {
+            const title = this.selectedMode
+              ? `Ejecutar tests de ${this.selectedMode}`
+              : "Ejecutar todos los tests";
+            const message = this.selectedMode
+              ? `¿Estás seguro de que quieres ejecutar los tests del modo "${this.selectedMode}"?`
+              : "¿Estás seguro de que quieres ejecutar todos los tests?";
+
             this.confirmModal = {
               show: true,
-              title: "Ejecutar todos los tests",
-              message: "¿Estás seguro de que quieres ejecutar todos los tests?",
+              title: title,
+              message: message,
               testName: null,
               action: "execute",
               loading: false,
@@ -2056,9 +2069,19 @@
                 await this.loadTests();
               } else {
                 // Ejecutar tests
-                const body = this.confirmModal.testName
-                  ? JSON.stringify({ testName: this.confirmModal.testName })
-                  : null;
+                let bodyData = {};
+                if (this.confirmModal.testName) {
+                  bodyData.testName = this.confirmModal.testName;
+                }
+                // Si se ejecutan todos los tests y hay un modo seleccionado, añadir expectedMode al body
+                if (!this.confirmModal.testName && this.selectedMode) {
+                  bodyData.expectedMode = this.selectedMode;
+                }
+
+                const body =
+                  Object.keys(bodyData).length > 0
+                    ? JSON.stringify(bodyData)
+                    : null;
 
                 const response = await fetch(
                   `https://n8n.housfy.com/webhook/sofy/execute-tests`,
